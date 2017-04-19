@@ -1,11 +1,11 @@
+//historico
 update xeo_historico set numero_colocacion = trim (numero_colocacion);
-
 update xeo_historico set transaccion=trim(transaccion);
-
 update xeo_historico set tipo_doc=trim(tipo_doc);
-
 update xeo_historico set tipo_doc=upper(tipo_doc);
 
+
+//Plan de pagos
 update xeo_plandepagos set numero_credito= trim (numero_credito);
 
 update xeo_plandepagos set modo_pago = 'Mensual'
