@@ -1,0 +1,138 @@
+//******************************
+//**********************************
+		
+		PLAN DE PAGOS
+		
+//******************************************
+//***************************************************
+'insert into xeo_plandepagos (numero_credito,cuota,ced_cliente,fecha_vencimiento,valor_cuota,valor_interes,valor_capital,valor_seguro,servicio_colocacion,valor_desembolso,numero_cuotas, pago_interes, punstos_spread, tasa_ea, tasa_periodo, plazo, modo_pago,fecha_desembolso,valor_saldo,fecha_fin_credito) values (',
+
+select  distinct 
+	TRIM(cco.num_cre_cuo) AS NUMERO_CREDITO,
+	cco.NUM_CUO AS CUOTA, 
+	ccd.cliente_desem AS CED_CLIENTE, --cliente_cuo AS CLIENTE_PP,
+	cco.f_vence_cuo AS FECHA_VENCE_PP,        
+	coalesce(cco.car_cap + cco.car_int + cac.cargo_cc,0) AS VALOR_CUOTA,
+	cco.car_int AS VALOR_INTERES,
+	cco.car_cap AS VALOR_CAPITAL, 
+	coalesce(cac.cargo_cc,0)    AS VALOR_SEGURO ,
+	ccd.linea_desem AS SERVICIO_COLOCACION, -- TABLA: LINEA_CRE: 01 FOMENTO, 02 TESORERIA, 03 FACTORING, 04 CREDITOS CAR, 05 CREDITOS LIBRANZA   
+	ccd.valor_desem AS VALOR_DESEMBOLSO,
+	ccd.cuo_ord_liq_desem AS NUMERO_CUOTAS, 
+	ccd.per_pag_i_desem AS PAGO_INTERES, 
+	cast (ccd.pun_adi_tas_desem as numeric(15,3)) as PUNTOS_SPREAD,
+	coalesce (cast( (power( 1 + (ccd.por_tasa_desem/100)/cast(12/cast(per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) ,cast(12/cast(per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) )-1 ) * 100 as numeric(15,4)) ,0) AS TASA_EA,//SE DEBE COMPARAR ESTE VALOR CON EL DE PLAN DE PAGOS PGADMIN --por_tasa_desem AS TASA,--TAS_PER_DESEM
+	coalesce(CAST( (power (cast(1 + (cast( (power( 1 + (ccd.por_tasa_desem/100)/cast(12/cast(per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) ,cast(12/cast(per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) )-1 ) * 100 as numeric(15,12)))/100 as numeric(15,12)) ,cast(1/cast(12/(cast(per_pag_k_desem/30 as numeric(15,12)) )as numeric(15,12)) as numeric(15,12)) ) -1) * 12 * 100 AS numeric(15,3)),0) as TASA_PERIODO,
+	cast (plazo_desem/30 as integer) AS PLAZO, --PASAR A MESES SE ENCUENTRA EN DIAS
+	(case 
+		per_pag_k_desem/30
+	when 1 then 'Mensual' 
+	when 2 then 'Bimestral'
+	when 3 then 'Trimestral'
+	when 4 then 'Cuatrimestral'
+	when 5 then 'Pentamestral'
+	when 6 then 'Semestral'
+	when 7 then 'Septamestral'
+	when 8 then 'Octamestral'
+	when 9 then 'Nonamestral'
+    when 10 then 'Decamestral'
+    when 11 then 'Oncemestral'
+    when 12 then 'Anual'
+	end)  AS MODO_PAGO, --PARA SABER LA PERIODICIDAD DEL PAGO
+
+	fec_desem AS FECHA_DESEMBOLSO--,
+    --0 as valor_saldo,
+    --null as fecha_fin_credito
+     
+from cf_cue_desem ccd
+INNER JOIN CF_CUOTAS_ORI cco ON (trim(ccd.num_desem) = trim(cco.num_cre_cuo) )
+left JOIN cf_aux_cargcuo cac ON (trim(cac.num_cc) = trim(cco.num_cre_cuo)  AND  cac.CUOTA_CC = cco.num_cuo )
+--where trim(ccd.num_desem)=('LIB-0001464')
+--LIB-0002118
+--LIB-0002312
+
+
+///Actualizar la fecha de vencimiento de los creditos
+select 'update xeo_plandepagos set fecha_fin_credito="'||cco.f_vence_cuo||'" where numero_credito="'||cco.num_cre_cuo||'"' 
+from cf_cuotas_ori cco
+inner join 
+(SELECT num_cre_cuo,max(num_cuo) cuotas
+  FROM cf_cuotas_ori
+  group by num_cre_cuo) a on (a.num_cre_cuo=cco.num_cre_cuo and a.cuotas=cco.num_cuo)
+  
+//Tablas para verificar los planes de pago_interes
+
+SELECT count(*) FROM cf_cuotas_cre ccc
+INNER JOIN cf_desem_sal cds ON (cds.num_des_sal=ccc.num_cre_cuo and ccc.lin_cuo=cds.lin_des_sal and ccc.suc_cuo=cds.suc_des_sal and cds.tip_des_sal=ccc.tip_car_cuo)
+--where ccc.num_cre_cuo='LIB-0002001'
+  
+  
+//******************************
+//**********************************
+		
+	HISTORICO
+		
+//******************************************
+//***************************************************
+  
+
+select  
+pagare_m AS NUMERO_COLOCACION,
+cliente_m AS CED_CLIENTE,
+sucur_m AS SUCURSAL,
+tip_cre_m AS TIPO_DOC,
+fecha_m AS FECHA_MOVIMIENTO,
+cuota_m AS CUOTA,
+tip_tra_m AS TRANSACCION,
+item_m AS DD,
+fi_pag_mor AS FECHA_DESDE,
+ff_pag_mor AS FECHA_HASTA,
+valor_m AS VALOR_TRANSACCION
+from CF_MOVIMIENTOS where PAGARE_M='LIB-0002001'
+
+
+SELECT COUNT(*)
+FROM (select 
+pagare_m AS NUMERO_COLOCACION,
+cliente_m AS CED_CLIENTE,
+sucur_m AS SUCURSAL,
+tip_cre_m AS TIPO_DOC,
+fecha_m AS FECHA_MOVIMIENTO,
+cuota_m AS CUOTA,
+tip_tra_m AS TRANSACCION,
+item_m AS DD,
+fi_pag_mor AS FECHA_DESDE,
+ff_pag_mor AS FECHA_HASTA,
+valor_m AS VALOR_TRANSACCION
+from CF_MOVIMIENTOS --where PAGARE_M='LIB-0002001')
+)a
+
+//***************************
+insert
+//**************************
+
+------detalle 
+
+select  'insert into xeo_historico (numero_colocacion,ced_cliente,sucursal,tipo_doc,fecha_movimiento, cuota,transaccion,dd,fecha_desde,fecha_hasta,valor_transaccion)
+values ("'||pagare_m||'",'||cliente_m||',"'||sucur_m||'","'||tip_cre_m||'","'||fecha_m||'","'||cuota_m||'","'||tip_tra_m ||'","'||item_m ||'","'
+||fi_pag_mor||'","'||ff_pag_mor||'",'||valor_m||');'
+from CF_MOVIMIENTOS 
+--where PAGARE_M='LIB-0002001'
+where pagare_m is not null 
+
+------encabezado
+
+SELECT 'insert into xeo_historico (ced_cliente,numero_colocacion,transaccion,fecha_desembolso,valor_desembolso,sucursal,tipo_doc) values ('||cliente_desem||',"'||num_desem||'","'||transaccion||'","'||fec_desem||'",'||valor_desem||',"111","credito");'
+from 
+(select 
+ distinct 
+    cliente_desem,
+    num_desem, 
+    case est_vh_desem 
+    when 'V' then 'VIGENTE'
+    when 'C' then 'CANCELADO'
+    END as transaccion,
+    fec_desem,
+    valor_desem 
+ from cf_cue_desem where  est_vh_desem NOT IN ('A','P','R') AND NUM_DESEM NOT IN ('LIB-0002118','LIB-0002312') 
+)a

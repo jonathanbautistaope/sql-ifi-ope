@@ -1,0 +1,54 @@
+//******************************
+//**********************************
+		
+		PLAN DE PAGOS
+		
+//******************************************
+//***************************************************
+
+select  
+        num_desem AS NUMERO_CREDITO,
+        NUM_CUO AS CUOTA, 
+        cliente_desem AS CED_CLIENTE, --cliente_cuo AS CLIENTE_PP,
+        F_VENCE_CUO AS FECHA_VENCE_PP,        
+        CF_CUOTAS_ORI.car_cap + CF_CUOTAS_ORI.car_int + cargo_cc AS VALOR_CUOTA,
+        CF_CUOTAS_ORI.car_int AS VALOR_INTERES,
+        CF_CUOTAS_ORI.car_cap AS VALOR_CAPITAL, 
+        cf_aux_cargcuo.cargo_cc    AS VALOR_SEGURO ,
+        linea_desem AS SERVICIO COLOCACION, -- TABLA: LINEA_CRE: 01 FOMENTO, 02 TESORERIA, 03 FACTORING, 04 CREDITOS CAR, 05 CREDITOS LIBRANZA   
+        valor_desem AS VALOR_DESEMBOLSO,
+        cuo_ord_liq_desem AS NUMERO_CUOTAS, 
+        per_pag_i_desem AS PAGO_INTERES, 
+        pun_adi_tas_desem as PUNTOS_SPREAD,      
+        por_tasa_desem + pun_adi_tas_desem AS TASA_EA,//SE DEBE COMPARAR ESTE VALOR CON EL DE PLAN DE PAGOS PGADMIN --por_tasa_desem AS TASA,--TAS_PER_DESEM
+        --POWER(CAST((1+(por_tasa_desem + pun_adi_tas_desem )) AS float),(1/)) AS FloatResult AS TASA_PERIODO,
+        plazo_desem AS PLAZO, --PASAR A MESES SE ENCUENTRA EN DIAS
+        case per_pag_k_desem/30
+		when 1 then '' AS MODO_PAGO, --PARA SABER LA PERIODICIDAD DEL PAGO
+
+        fec_desem AS FECHA_DESEMBOLSO,        
+         
+        --cla_liq_desem AS CLASE_LIQUIDACION_DESEMBOLSO,
+        --tip_cal_desem AS CLASIFICACION,   
+        --tasa_aseg_desem AS TASA_DESEMBOLSO_ASEGURADORA,        
+        --NUM_CRE_CUO AS NUMERO_CREDITO,
+from cf_cue_desem
+INNER JOIN CF_CUOTAS_ORI ON (cf_cue_desem.num_desem = CF_CUOTAS_ORI.num_cre_cuo AND DOC_CON_DESEM IS NULL)
+left JOIN cf_aux_cargcuo ON (cf_aux_cargcuo.num_cc = CF_CUOTAS_ORI.num_cre_cuo  AND  cf_aux_cargcuo.CUOTA_CC = CF_CUOTAS_ORI.num_cuo )
+--where num_cre_cuo='LIB-0001237'
+
+
+select 'update xeo_plandepagos set fecha_fin_credito="'||cco.f_vence_cuo||'" where numero_credito="'||cco.num_cre_cuo||'"' 
+from cf_cuotas_ori cco
+inner join 
+(SELECT num_cre_cuo,max(num_cuo) cuotas
+  FROM cf_cuotas_ori
+  group by num_cre_cuo) a on (a.num_cre_cuo=cco.num_cre_cuo and a.cuotas=cco.num_cuo)
+  
+  
+///planes de pagos faltantes
+  
+select distinct cf_cue_desem.num_desem
+from cf_cue_desem
+INNER JOIN CF_CUOTAS_ORI ON (cf_cue_desem.num_desem = CF_CUOTAS_ORI.num_cre_cuo AND DOC_CON_DESEM IS NULL)
+left JOIN cf_aux_cargcuo ON (cf_aux_cargcuo.num_cc = CF_CUOTAS_ORI.num_cre_cuo  AND  cf_aux_cargcuo.CUOTA_CC = CF_CUOTAS_ORI.num_cuo )

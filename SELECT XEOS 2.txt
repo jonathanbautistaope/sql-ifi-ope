@@ -1,0 +1,74 @@
+//******************************
+//**********************************
+		
+		PLAN DE PAGOS
+		
+//******************************************
+//***************************************************
+
+select  num_desem AS NUMERO_CREDITO,
+        fec_desem AS FECHA_DESEMBOLSO,
+        cliente_desem AS CED_CLIENTE,
+        valor_desem AS VALOR_DESEMBOLSO,
+        plazo_desem AS PLAZO, --PASAR A MESES SE ENCUENTRA EN DIAS
+        per_pag_k_desem AS MODO_PAGO, --PARA SABER LA PERIODICIDAD DEL PAGO
+        por_tasa_desem AS TASA,--TAS_PER_DESEM
+        per_pag_i_desem AS PAGO_INTERES,
+        cla_liq_desem AS CLASE_LIQUIDACION_DESEMBOLSO,
+        tip_cal_desem AS CLASIFICACION,
+        cuo_ord_liq_desem AS NUMERO_CUOTAS,
+        tasa_aseg_desem AS TASA_DESEMBOLSO_ASEGURADORA,
+        
+        --NUM_CRE_CUO AS NUMERO_CREDITO,
+        NUM_CUO AS CUOTA,
+        F_VENCE_CUO AS FECHA_VENCE_PP,
+        car_cap AS CAPITAL_PLAN_PAGOS,
+        car_int AS INTERES_PP,
+        cliente_cuo AS CLIENTE_PP,
+        cARGO_cc    AS SEGURO_PP   
+        
+from cf_cue_desem
+LEFT JOIN cf_aux_cuotas ON (cf_cue_desem.num_desem = cf_aux_cuotas.num_cre_cuo)
+LEFT JOIN cf_aux_cargcuo ON (cf_aux_cargcuo.num_cc=cf_aux_cuotas.num_cre_cuo AND cf_aux_cuotas.num_cuo = cf_aux_cargcuo.CUOTA_CC)
+
+where num_cre_cuo='LIB-0001237'
+
+
+/***************
+//******************
+///*********************
+////************************
+
+/*select  num_desem AS NUMERO_CREDITO, fec_desem AS FECHA_DESEMBOLSO,
+        cliente_desem AS CED_CLIENTE,  valor_desem AS VALOR_DESEMBOLSO,
+        plazo_desem AS PLAZO, --PASAR A MESES SE ENCUENTRA EN DIAS
+        per_pag_k_desem AS MODO_PAGO, --PARA SABER LA PERIODICIDAD DEL PAGO
+        por_tasa_desem AS TASA,--TAS_PER_DESEM
+        per_pag_i_desem AS PAGO_INTERES, cla_liq_desem AS CLASE_LIQUIDACION_DESEMBOLSO,
+        tip_cal_desem AS CLASIFICACION,  cuo_ord_liq_desem AS NUMERO_CUOTAS,
+        tasa_aseg_desem AS TASA_DESEMBOLSO_ASEGURADORA,        
+        --NUM_CRE_CUO AS NUMERO_CREDITO,
+        NUM_CUO AS CUOTA,  F_VENCE_CUO AS FECHA_VENCE_PP,
+        car_cap AS CAPITAL_PLAN_PAGOS, car_int AS INTERES_PP,
+        cliente_cuo AS CLIENTE_PP, cargo_cc    AS SEGURO_PP   
+        
+from cf_cue_desem
+LEFT JOIN cf_aux_cuotas ON (cf_cue_desem.num_desem = cf_aux_cuotas.num_cre_cuo)
+LEFT JOIN cf_aux_cargcuo ON (cf_aux_cargcuo.num_cc = cf_aux_cuotas.num_cre_cuo  AND  cf_aux_cargcuo.CUOTA_CC = cf_aux_cuotas.num_cuo )
+UNION */
+select  num_desem AS NUMERO_CREDITO, fec_desem AS FECHA_DESEMBOLSO,
+        cliente_desem AS CED_CLIENTE,  valor_desem AS VALOR_DESEMBOLSO,
+        plazo_desem AS PLAZO, --PASAR A MESES SE ENCUENTRA EN DIAS
+        per_pag_k_desem AS MODO_PAGO, --PARA SABER LA PERIODICIDAD DEL PAGO
+        por_tasa_desem AS TASA,--TAS_PER_DESEM
+        per_pag_i_desem AS PAGO_INTERES, cla_liq_desem AS CLASE_LIQUIDACION_DESEMBOLSO,
+        tip_cal_desem AS CLASIFICACION,  cuo_ord_liq_desem AS NUMERO_CUOTAS,
+        tasa_aseg_desem AS TASA_DESEMBOLSO_ASEGURADORA,        
+        --NUM_CRE_CUO AS NUMERO_CREDITO,
+        NUM_CUO AS CUOTA,  F_VENCE_CUO AS FECHA_VENCE_PP,
+        car_cap AS CAPITAL_PLAN_PAGOS, car_int AS INTERES_PP,
+        cliente_cuo AS CLIENTE_PP, cargo_cc    AS SEGURO_PP   
+        
+from cf_cue_desem
+LEFT JOIN CF_CUOTAS_ORI ON (cf_cue_desem.num_desem = CF_CUOTAS_ORI.num_cre_cuo)
+LEFT JOIN cf_aux_cargcuo ON (cf_aux_cargcuo.num_cc = CF_CUOTAS_ORI.num_cre_cuo  AND  cf_aux_cargcuo.CUOTA_CC = CF_CUOTAS_ORI.num_cuo )

@@ -1,0 +1,60 @@
+//***************************
+cuota seguro
+//***************************
+select distinct num_cc as numero_credito,
+       cuota_cc as cuota,
+       date(fecha_cc) as fecha_pago_cuota ,
+       cargo_cc as valor_cuota_seguro      
+from cf_aux_cargcuo
+/* Las siguientes tablas contienen fechas diferentes a la anterior por lo tanto hacen que al realizar la union se duplique la informacion.
+union 
+select NUM_CC,
+       CUOTA_CC,
+       date(FECHA_CC),
+       CARGO_CC  
+from cf_carg_cuorig
+union
+select num_cc,
+		cuota_cc,
+		date(fecha_cc),
+		cargo_cc
+from cf_cargos_cuotas
+*/
+
+
+//*********************************
+ENCABEZAO DE PLAN DE PAGOS
+//*********************************
+
+select  num_desem AS NUMERO_CREDITO,
+        fec_desem AS FECHA_DESEMBOLSO,
+        cliente_desem AS CED_CLIENTE,
+        valor_desem AS VALOR_DESEMBOLSO,
+        plazo_desem AS PLAZO, --PASAR A MESES SE ENCUENTRA EN DIAS
+        per_pag_k_desem AS MODO_PAGO, --PARA SABER LA PERIODICIDAD DEL PAGO
+        por_tasa_desem AS TASA,--TAS_PER_DESEM
+        per_pag_i_desem AS PAGO_INTERES,
+        cla_liq_desem AS CLASE_LIQUIDACION_DESEMBOLSO,
+        tip_cal_desem AS CLASIFICACION,
+        cuo_ord_liq_desem AS NUMERO_CUOTAS,
+        tasa_aseg_desem AS TASA_DESEMBOLSO_ASEGURADORA
+        
+        
+ 
+--COUNT(*)
+*
+from cf_cue_desem
+where num_desem='LIB-0001237'
+AND DOC_CON_DESEM IS NULL -- NUM_CON_DESEM IS NULL
+
+
+select  num_desem 
+from cf_cue_desem
+where DOC_CON_DESEM IS NULL
+union
+select  num_desem 
+from cf_cue_desem
+where tipo_desem='CR'
+
+
+
