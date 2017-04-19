@@ -632,9 +632,12 @@ where mcca.numerocredito IN (
 'CAR-189','CAR-191','FAC-101','FAC-102','FAC-103','FAC-104','FAC-105','FAC-106*','FAC-107','FAC-108','FAC-109')
 AND CAST(COALESCE(xpp.cuota,'0') AS INTEGER)=0
 
-/* update  M_CLI_DETALLE_LIQUIDACION_CUOTA set 
-	saldoactualcapital=0,saldoactualcorriente=0,saldoactualseguro=0,saldoactualmoratorios=0;
-	*/
+/* 
+
+update  M_CLI_DETALLE_LIQUIDACION_CUOTA set 
+saldoactualcapital=0,saldoactualcorriente=0,saldoactualseguro=0,saldoactualmoratorios=0;
+
+*/
 
 //////******************************
 //////***************************************
