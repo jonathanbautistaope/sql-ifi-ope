@@ -174,7 +174,7 @@ from CF_MOVIMIENTOS --where PAGARE_M='LIB-0002001')
 insert
 //**************************
 
-------detalle 
+------detalle son todos los movimientos que han tenido todos los creditos.
 
 select  'insert into xeo_historico (numero_colocacion,ced_cliente,sucursal,tipo_doc,fecha_movimiento, cuota,transaccion,dd,fecha_desde,fecha_hasta,valor_transaccion)
 values ("'||pagare_m||'",'||cliente_m||',"'||sucur_m||'","'||tip_cre_m||'","'||fecha_m||'","'||cuota_m||'","'||tip_tra_m ||'","'||item_m ||'","'
@@ -183,7 +183,7 @@ from CF_MOVIMIENTOS
 --where PAGARE_M='LIB-0002001'
 where pagare_m is not null 
 
-------encabezado
+------encabezado solo debe tener si el credito esta o no vigente
 
 SELECT 'insert into xeo_historico (ced_cliente,numero_colocacion,transaccion,fecha_desembolso,valor_desembolso,sucursal,tipo_doc) values ('||cliente_desem||',"'||num_desem||'","'||transaccion||'","'||fec_desem||'",'||valor_desem||',"111","credito");'
 from 
