@@ -1914,3 +1914,21 @@ inner join m_cli_credito_aprobado mcca on (mckc.m_cli_credito_aprobadoid=mcca.id
 where mcca.numerocredito='LIB-0001604'
 order by m_cli_credito_aprobadoid
 
+----------------------------
+Consultas Carlos.
+----------------------------
+ SELECT  m_cli_kardex_credito.fechatransaccion,m_cli_kardex_credito.m_cli_credito_aprobadoid, maxkardexcredito.idmax, (m_cli_kardex_credito.acumuladocargocapital+  m_cli_kardex_credito.acumuladomoragenerada+ m_cli_kardex_credito.acumuladocorrientegenerado+ m_cli_kardex_credito.acumuladocuotaseguro+  m_cli_kardex_credito.acumuladootros) sumacapital, (m_cli_kardex_credito.acumuladoabonoseguro,  m_cli_kardex_credito.acumuladoabonootros, Xm_cli_kardex_credito.acumuladoabonocapital+m_cli_kardex_credito.acumuladoabonomora+m_cli_kardex_credito.acumuladoabonocorriente) 
+   FROM m_cli_kardex_credito
+   JOIN ( SELECT max(m_cli_kardex_credito_1.id) AS idmax
+           FROM m_cli_kardex_credito m_cli_kardex_credito_1
+          GROUP BY m_cli_kardex_credito_1.m_cli_credito_aprobadoid) maxkardexcredito ON maxkardexcredito.idmax = m_cli_kardex_credito.id
+          where m_cli_kardex_credito.m_cli_credito_aprobadoid=534
+	  
+	  
+ SELECT m_cli_kardex_credito.id, m_cli_kardex_credito.m_cli_detalle_comprobante_creditoid, m_cli_kardex_credito.s_tipo_documentoid, m_cli_kardex_credito.s_tipo_movimientoid, m_cli_kardex_credito.s_vigenciavigencia, m_cli_kardex_credito.s_periodoperiodo, m_cli_kardex_credito.fechatransaccion, m_cli_kardex_credito.username, m_cli_kardex_credito.creacion, m_cli_kardex_credito.m_cli_credito_aprobadoid, m_cli_kardex_credito.acumuladocargocapital, m_cli_kardex_credito.acumuladoabonocapital, m_cli_kardex_credito.acumuladomoragenerada, m_cli_kardex_credito.acumuladoabonomora, m_cli_kardex_credito.acumuladocorrientegenerado, m_cli_kardex_credito.acumuladoabonocorriente, m_cli_kardex_credito.acumuladocuotaseguro, m_cli_kardex_credito.acumuladoabonoseguro, m_cli_kardex_credito.fecharealdepago, m_cli_kardex_credito.m_tes_detalle_comprobante_egresoid, maxkardexcredito.idmax, m_cli_kardex_credito.m_cli_detalle_acta_castigoid, m_cli_kardex_credito.m_cli_detalle_liquidacion_cuotaid, m_cli_kardex_credito.acumuladootros, m_cli_kardex_credito.acumuladoabonootros, m_cli_kardex_credito.valortransaccion, m_cli_kardex_credito.capitalperiodo, m_cli_kardex_credito.abonocapital, m_cli_kardex_credito.interescorrienteperiodo, m_cli_kardex_credito.abonocorriente, m_cli_kardex_credito.interesmoratorioperiodo, m_cli_kardex_credito.abonomoratorios, m_cli_kardex_credito.cuotaseguro, m_cli_kardex_credito.abonoseguro, m_cli_kardex_credito.cuotaotros, m_cli_kardex_credito.estado
+   FROM m_cli_kardex_credito
+   JOIN ( SELECT max(m_cli_kardex_credito_1.id) AS idmax
+           FROM m_cli_kardex_credito m_cli_kardex_credito_1
+          GROUP BY m_cli_kardex_credito_1.m_cli_credito_aprobadoid) maxkardexcredito ON maxkardexcredito.idmax = m_cli_kardex_credito.id
+          where m_cli_kardex_credito.m_cli_credito_aprobadoid=534
+
