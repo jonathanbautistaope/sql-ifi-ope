@@ -116,20 +116,7 @@ from (
 	from xeo_historico
 	WHERE FECHA_MOVIMIENTO IS NOT NULL
 	group by numero_colocacion,ced_cliente,fecha_movimiento,numero_doc
-	having count(*)>1
-	union
-	--Esto se realizo debido a que se va a tomar en cuenta solo un registro por numero del documento
-	select numero_colocacion,ced_cliente,fecha_movimiento,numero_doc,1
-	from xeo_historico
-	where numero_colocacion in ('CAR-181','CAR-182','CAR-183','CAR-186','CAR-187','CAR-188*','FAC-102','FAC-103','FAC-104','FAC-105','FAC-107')
-	AND FECHA_MOVIMIENTO IS NOT NULL
 	) xh
-	inner join (select numero_colocacion,tipo_doc
-	from xeo_historico  
-	--WHERE transaccion like '%VIGENTE%'
-	) xhVigente 
-	on xhVigente.numero_colocacion = xh.numero_colocacion
-	and xh.fecha_movimiento IS NOT NULL
 	inner join s_tercero on (xh.ced_cliente=s_tercero.numero
 )
 --WHERE XH.numero_colocacion in ('CAR-181')
