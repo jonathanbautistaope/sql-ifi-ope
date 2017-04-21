@@ -177,7 +177,7 @@ insert
 ------detalle son todos los movimientos que han tenido todos los creditos.
 
 select  'insert into xeo_historico (numero_colocacion,ced_cliente,sucursal,tipo_doc,fecha_movimiento, cuota,transaccion,dd,fecha_desde,fecha_hasta,valor_transaccion)
-values ("'||pagare_m||'",'||cliente_m||',"'||sucur_m||'","'||tip_cre_m||'","'||fecha_m||'","'||cuota_m||'","'||tip_tra_m ||'","'||item_m ||'","'
+values ("'||pagare_m||'",'||cliente_m||',"'||sucur_m||'","'||tip_cre_m||'","'||fecha_m||'","'||cuota_m||'","'||tip_tra_m ||'","'||dias ||'","'
 ||fi_pag_mor||'","'||ff_pag_mor||'",'||valor_m||');'
 from CF_MOVIMIENTOS 
 --where PAGARE_M='LIB-0002001'
