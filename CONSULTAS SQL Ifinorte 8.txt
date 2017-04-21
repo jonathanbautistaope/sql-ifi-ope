@@ -1036,30 +1036,6 @@ SET
 	interesmoratorioperiodo=ROUND(((32.985/100)/360)*diasmora*saldoactualcapital)
 FROM M_CLI_LIQUIDACION_CUOTA MCLC
 WHERE MCLC.ID=MCDLC.M_CLI_LIQUIDACION_CUOTAID 
-
-
----------------------------------------------------					
-----m_cli_detalle_liquidacion_cuota saldos actuales
----------------------------------------------------
-	
-update	m_cli_detalle_liquidacion_cuota 
-set 	saldoactualcapital = coalesce(capitalperiodo,0)-coalesce(abonocapital,0) ;
-
-update 	m_cli_detalle_liquidacion_cuota 
-set 	saldoactualcorriente = coalesce(INTERESCORRIENTEPERIODO,0) -coalesce(ABONOCORRIENTE,0) ;
-
-update 	m_cli_detalle_liquidacion_cuota 
-set 	saldoactualmoratorios = coalesce(interesmoratorioperiodo,0) - coalesce(abonomoratorios,0) ;
-	
-update 	m_cli_detalle_liquidacion_cuota 
-set 	saldoactualseguro = coalesce(cuotaseguro,0) - coalesce(ABONOSEGURO,0);
-
-	
-update 	m_cli_detalle_liquidacion_cuota */
-set 	saldonuevocredito = coalesce(saldoactualcapital,0) 	+ 
-						coalesce(saldoactualcorriente,0) 			+ 
-						coalesce(saldoactualmoratorios,0) + 
-						coalesce(saldoactualseguro,0) ;
 						
 
 -------------------------------------------------------------------------
@@ -1398,10 +1374,105 @@ inner join
 			 and mcdcc.m_cli_credito_aprobadoid=mcca.id
 			 and mcdcc.m_cli_detalle_liquidacion_cuotaid=mcdlc.id)
 			 			 			 
----------------------------------------------------------------------
-m_cli_kardex_credito para los cred que estan vigentes que tienen novedades
+--------------------------------------------------
+// para adicionar los creditos que no tienen ningún movimiento
+--------------------------------------------------
+select * from xeo_historico
+where numero_colocacion in (
+'2006-02-335',
+'2008-02-396',
+'2008-02-397',
+'CAR-184',
+'CAR-190',
+'CAR-192',
+'CAR-193',
+'CAR-194',
+'LIB-0002780',
+'LIB-0002782',
+'LIB-0002796',
+'LIB-0002797',
+'LIB-0002798',
+'LIB-0002799',
+'LIB-0002805',
+'LIB-0002806',
+'LIB-0002809',
+'LIB-0002810',
+'LIB-0002811',
+'LIB-0002815',
+'LIB-0002816',
+'LIB-0002817',
+'LIB-0002819',
+'LIB-0002820',
+'LIB-0002821',
+'LIB-0002822',
+'LIB-0002823',
+'LIB-0002835',
+'LIB-0002837',
+'LIB-0002838',
+'LIB-0002839',
+'LIB-0002840',
+'LIB-0002841',
+'LIB-0002842',
+'LIB-0002843',
+'LIB-0002844',
+'LIB-0002845',
+'LIB-0002846',
+'LIB-0002847',
+'LIB-0002848',
+'LIB-0002849',
+'LIB-0002850',
+'LIB-0002852',
+'LIB-0002854',
+'LIB-0002855',
+'LIB-0002856',
+'LIB-0002857',
+'LIB-0002858',
+'LIB-0002859',
+'LIB-0002860',
+'LIB-0002861',
+'LIB-0002862',
+'LIB-0002863',
+'LIB-0002864',
+'LIB-0002865',
+'LIB-0002866',
+'LIB-0002867',
+'LIB-0002868',
+'LIB-0002869',
+'LIB-0002870',
+'LIB-0002871',
+'LIB-0002872',
+'LIB-0002873',
+'LIB-0002874',
+'LIB-0002875',
+'LIB-0002876',
+'LIB-0002877',
+'LIB-0002878',
+'LIB-0002879',
+'LIB-0002880',
+'LIB-0002881',
+'LIB-0002882',
+'LIB-0002883',
+'LIB-0002884',
+'LIB-0002885',
+'LIB-0002886',
+'LIB-0002887',
+'LIB-0002888',
+'LIB-0002890',
+'LIB-0002892',
+'LIB-0002893',
+'LIB-0002894',
+'LIB-0002895',
+'LIB-0002896',
+'LIB-0002897',
+'LIB-0002898',
+'LIB-0002899',
+'LIB-0002900',
+'LIB-0002901'
+)
 
-----------------------------------------------------------------------
+-----------------------------------
+Insert para m_cli_kardex_credito creditos que no tienen movimientos 
+-----------------------------------
 select 
 	--xpp2.numero_credito,xh.numero_colocacion,xpp2.cuota,
 	'insert into m_cli_kardex_credito 
@@ -1431,94 +1502,58 @@ select
 	cuotaseguro,
 	abonoseguro,
 	estado) values ('||
-	mcdcc.id||--m_cli_detalle_comprobante_creditoid
+	'null'||--m_cli_detalle_comprobante_creditoid
 	',42,187,2017,1,"'||--s_tipo_documentoid,s_tipo_movimientoid,s_vigenciavigencia,s_periodoperiodo,	
-	xh.fecha_movimiento||'","'||--fecha_transaccion
+	xh.fecha_desembolso||'","'||--fecha_transaccion
 	'admin@siep.com'||'","'||--username
 	'01-01-2017'||'",'||--creacion
 	mcca.id||','||
 	xh.valor_desembolso  ||','|| --coalesce(xh.interes_corriente,0)+coalesce(xh.seguro,0)+coalesce(xh.deuda,0)+coalesce(xh.mora,0) ||','||--acumulado cargo capital
-	coalesce(xh.deuda,0)||','||--acumulado abono capital
-	coalesce(mcdlc.saldoanteriormoratorios,0)||','||--xmora.valor_mora;tabla diana mora acumuladomoragenerada
-	COALESCE(xh.mora,0)||','||--xmora.mora; acumuladoabonomora
-	coalesce(xpp2.acumulado_interes,0)||','||--acumulado corriente gene
-	coalesce(xh.interes_corriente,0)||','||--acumulado abono corriente
-	coalesce(xpp2.acumulado_seguro,0)||','||--acumulado cuota seguro
-	coalesce(xh.seguro,0)||',"'||--acumulado abono seguro
-	xh.fecha_movimiento||'",'||--fecha_real_de pago
-	mcdlc.id||','||--m_cli_detalle_liquidacion_cuotaid
-	coalesce(xh.interes_corriente,0)+coalesce(xh.seguro,0)+coalesce(xh.deuda,0)+coalesce(xh.mora,0)||','||--valor_transaccion
-	coalesce(xpp2.valor_capital,0)||','||--capitalperiodo
-	coalesce(xh.deuda,0)||','||--abono capital
-	coalesce(xpp2.valor_interes,0)||','||--interes corriente periodo
-	coalesce(xh.interes_corriente,0)||','||--abono corriente
-	coalesce(mcdlc.interesmoratorioperiodo,0)||','|| --interes moratorio periodo
-	COALESCE(xh.mora,0)||','||--xmora.mora;abono moratorios
-	coalesce(xpp2.valor_seguro,0)||','|| --cuota seguro
-	coalesce(xh.Seguro,0)||',"'|| --abono seguro
+	0||','||--acumulado abono capital
+	0||','||--xmora.valor_mora;tabla diana mora acumuladomoragenerada
+	0||','||--xmora.mora; acumuladoabonomora
+	0||','||--acumulado corriente gene
+	0||','||--acumulado abono corriente
+	0||','||--acumulado cuota seguro
+	0||',"'||--acumulado abono seguro
+	xh.fecha_desembolso||'",'||--fecha_real_de pago
+	'null'||','||--m_cli_detalle_liquidacion_cuotaid
+	0||','||--valor_transaccion
+	0||','||--capitalperiodo
+	0||','||--abono capital
+	0||','||--interes corriente periodo
+	0||','||--abono corriente
+	0||','|| --interes moratorio periodo
+	0||','||--xmora.mora;abono moratorios
+	0||','|| --cuota seguro
+	0||',"'|| --abono seguro
 	'Autorizado'||'");'--estado	
-from 
-	(select xpp.id,xpp.numero_credito,xpp.cuota,
-		xpp.valor_cuota,
-			(select sum(valor_cuota) 
-				from 
-				xeo_plandepagos xpp1
-			where xpp1.id<=xpp.id and xpp.numero_credito=xpp1.numero_credito) acumulado_cuota,
-		xpp.valor_interes,
-		(select sum(valor_interes)
-				from 
-				xeo_plandepagos xpp1
-			where xpp1.id<=xpp.id and xpp.numero_credito=xpp1.numero_credito) acumulado_interes,
-		xpp.valor_capital,
-		(select sum(valor_capital)
-				from 
-				xeo_plandepagos xpp1
-			where xpp1.id<=xpp.id and xpp.numero_credito=xpp1.numero_credito) acumulado_capital,
-		xpp.valor_saldo,
-		(select sum(valor_saldo)
-				from 
-				xeo_plandepagos xpp1
-			where xpp1.id<=xpp.id and xpp.numero_credito=xpp1.numero_credito) acumulado_saldo,
-		xpp.valor_seguro,
-		(select sum(valor_seguro)
-				from 
-				xeo_plandepagos xpp1
-			where xpp1.id<=xpp.id and xpp.numero_credito=xpp1.numero_credito) acumulado_seguro	
-		from xeo_plandepagos xpp
-		order by xpp.numero_credito,xpp.id
-	) xpp2
-inner join  (select xeoh.numero_colocacion,cuota,
-		coalesce(xeoh2.valor_desembolso,0) valor_desembolso,
-		fecha_movimiento,
-		SUM(case
-		when POSITION( 'Int.' IN transaccion)>0
-			then coalesce(VALOR_TRANSACCION,0) end)interes_corriente,
-		sum(case
-		when POSITION( 'Seguro' IN transaccion)>0 
-			then coalesce(valor_transaccion,0) end ) seguro,
-		sum(case
-		when POSITION( 'Deuda' IN transaccion)>0  
-			then coalesce(valor_transaccion,0) end ) deuda,
-		sum(case
-		when POSITION( 'Mora' IN transaccion)>0  
-			then coalesce(valor_transaccion,0) end ) mora,
-		sum(saldo_capital) capital
-		from xeo_historico xeoh
-		inner join (select numero_colocacion,valor_desembolso
+from (select numero_colocacion,valor_desembolso,fecha_desembolso
 		 from xeo_historico
-		 where cuota is null)xeoh2
-		on ( xeoh2.numero_colocacion=xeoh.numero_colocacion )
-		where cuota is not null --and xeoh.numero_colocacion='LIB-0002001'
-		group by 1,2,3,4		
+		 where cuota is null and numero_colocacion
+		 in ('2006-02-335','2008-02-396','2008-02-397','CAR-184','CAR-190',
+				'CAR-192','CAR-193','CAR-194','LIB-0002780',
+				'LIB-0002782','LIB-0002796','LIB-0002797','LIB-0002798',
+				'LIB-0002799','LIB-0002805','LIB-0002806','LIB-0002809',
+				'LIB-0002810','LIB-0002811','LIB-0002815','LIB-0002816',
+				'LIB-0002817','LIB-0002819','LIB-0002820','LIB-0002821',
+				'LIB-0002822','LIB-0002823','LIB-0002835','LIB-0002837',
+				'LIB-0002838','LIB-0002839','LIB-0002840','LIB-0002841',
+				'LIB-0002842','LIB-0002843','LIB-0002844','LIB-0002845',
+				'LIB-0002846','LIB-0002847','LIB-0002848','LIB-0002849',
+				'LIB-0002850','LIB-0002852','LIB-0002854','LIB-0002855',
+				'LIB-0002856','LIB-0002857','LIB-0002858','LIB-0002859',
+				'LIB-0002860','LIB-0002861','LIB-0002862','LIB-0002863',
+				'LIB-0002864','LIB-0002865','LIB-0002866','LIB-0002867',
+				'LIB-0002868','LIB-0002869','LIB-0002870','LIB-0002871',
+				'LIB-0002872','LIB-0002873','LIB-0002874','LIB-0002875',
+				'LIB-0002876','LIB-0002877','LIB-0002878','LIB-0002879',
+				'LIB-0002880','LIB-0002881','LIB-0002882','LIB-0002883',
+				'LIB-0002884','LIB-0002885','LIB-0002886','LIB-0002887',
+				'LIB-0002888','LIB-0002890','LIB-0002892','LIB-0002893',
+				'LIB-0002894','LIB-0002895','LIB-0002896','LIB-0002897',
+				'LIB-0002898','LIB-0002899','LIB-0002900','LIB-0002901'					)		
 	) xh
-	on (xh.numero_colocacion=xpp2.numero_credito and xh.cuota=xpp2.cuota)
-		
-inner join 
-	(select 
-	descripcion,substring(descripcion from position ('Num.Credito:' in descripcion)+12 for char_length(descripcion)) as credito,id,
-	fecha
-	from m_cli_comprobante_credito) mccc
-		on (trim(xh.numero_colocacion) = trim(mccc.credito) and (mccc.fecha=xh.fecha_movimiento))
 
 inner join 
 	(select id,numerocredito,
@@ -1535,27 +1570,36 @@ inner join
 		when modalidadpago='Decamestral' then 10
 		when modalidadpago='Anual' then  12
 		end) mesespago
-		from m_cli_credito_aprobado 		
-	) mcca
-	on (trim(mcca.numerocredito)=trim(xpp2.numero_credito))	
-
-inner join 
-	(select 
-		substring(descripcion from position ('Num.Credito:' in descripcion)+12 for char_length(descripcion)) as credito,id
-		from m_cli_liquidacion_cuota) mclc
-			on (trim(xpp2.numero_credito) = trim(mclc.credito))
-
-inner join 
-	m_cli_detalle_liquidacion_cuota mcdlc 
-		on (mcdlc.m_cli_credito_aprobadoid=mcca.id) and (cast(xpp2.cuota as integer)=mcdlc.numerocuota)
+		from m_cli_credito_aprobado mcca
+		where (  numerocredito in 
+			('2006-02-335','2008-02-396','2008-02-397','CAR-184','CAR-190',
+				'CAR-192','CAR-193','CAR-194','LIB-0002780',
+				'LIB-0002782','LIB-0002796','LIB-0002797','LIB-0002798',
+				'LIB-0002799','LIB-0002805','LIB-0002806','LIB-0002809',
+				'LIB-0002810','LIB-0002811','LIB-0002815','LIB-0002816',
+				'LIB-0002817','LIB-0002819','LIB-0002820','LIB-0002821',
+				'LIB-0002822','LIB-0002823','LIB-0002835','LIB-0002837',
+				'LIB-0002838','LIB-0002839','LIB-0002840','LIB-0002841',
+				'LIB-0002842','LIB-0002843','LIB-0002844','LIB-0002845',
+				'LIB-0002846','LIB-0002847','LIB-0002848','LIB-0002849',
+				'LIB-0002850','LIB-0002852','LIB-0002854','LIB-0002855',
+				'LIB-0002856','LIB-0002857','LIB-0002858','LIB-0002859',
+				'LIB-0002860','LIB-0002861','LIB-0002862','LIB-0002863',
+				'LIB-0002864','LIB-0002865','LIB-0002866','LIB-0002867',
+				'LIB-0002868','LIB-0002869','LIB-0002870','LIB-0002871',
+				'LIB-0002872','LIB-0002873','LIB-0002874','LIB-0002875',
+				'LIB-0002876','LIB-0002877','LIB-0002878','LIB-0002879',
+				'LIB-0002880','LIB-0002881','LIB-0002882','LIB-0002883',
+				'LIB-0002884','LIB-0002885','LIB-0002886','LIB-0002887',
+				'LIB-0002888','LIB-0002890','LIB-0002892','LIB-0002893',
+				'LIB-0002894','LIB-0002895','LIB-0002896','LIB-0002897',
+				'LIB-0002898','LIB-0002899','LIB-0002900','LIB-0002901'
+				))
 		
+	) mcca
+	on (trim(mcca.numerocredito)=trim(xh.numero_colocacion))	
 
-inner join 
-	m_cli_detalle_comprobante_credito mcdcc
-		on (mcdcc.m_cli_comprobante_creditoid = mccc.id
-			 and mcdcc.m_cli_credito_aprobadoid=mcca.id
-			 and mcdcc.m_cli_detalle_liquidacion_cuotaid=mcdlc.id)
-			 			 			 
+
 
 ---------------------------------------------------	
 ///Consultar para verificar los updates que siguen.
