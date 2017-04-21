@@ -4,80 +4,8 @@ update xeo_historico set transaccion=trim(transaccion);
 update xeo_historico set tipo_doc=trim(tipo_doc);
 update xeo_historico set tipo_doc=upper(tipo_doc);
 
-update xeo_historico
-set transaccion='CANCELADO'
-where numero_colocacion= 'LIB-0001758'
-AND CUOTA IS NULL;
-
-update xeo_historico
-set transaccion='CANCELADO'
-where numero_colocacion= 'LIB-0001765'
-AND CUOTA IS NULL;
-
-update xeo_historico
-set numero_colocacion= 'LIB- 0001869'
-where numero_colocacion= 'LIB-0001869';
-
-update xeo_historico
-set transaccion='CANCELADO'
-where numero_colocacion= 'LIB-0001878'
-AND CUOTA IS NULL;
-
-update xeo_historico
-set transaccion='VIGENTE'
-where numero_colocacion LIKE '%LIB-0002219%'
-AND CUOTA IS NULL;
-
-update xeo_historico
-set transaccion='VIGENTE'
-where numero_colocacion LIKE '%LIB-0002223%'
-AND CUOTA IS NULL;
-
-update xeo_historico
-set transaccion='VIGENTE'
-where numero_colocacion LIKE '%LIB-0002238%'
-AND CUOTA IS NULL;
-
-update xeo_historico
-set transaccion='VIGENTE'
-where numero_colocacion LIKE '%LIB-0002350%'
-AND CUOTA IS NULL;
-
-update xeo_historico
-set transaccion='VIGENTE'
-where numero_colocacion LIKE '%LIB-0002493%'
-AND CUOTA IS NULL;
-
-
 //Plan de pagos
 update xeo_plandepagos set numero_credito= trim (numero_credito);
-
-update xeo_plandepagos set modo_pago = 'Mensual'
-where modo_pago='MENSUAL';
-
-update xeo_plandepagos set modo_pago = 'Bimestral'
-where modo_pago='BIMESTRAL';
-
-update xeo_plandepagos set modo_pago = 'Trimestral'
-where modo_pago='TRIMESTRAL';
-
-update xeo_plandepagos set modo_pago = 'Semestral'
-where modo_pago='SEMESTRAL';
-
-update xeo_plandepagos set modo_pago = 'Anual'
-where modo_pago='ANUAL';
-	
-update xeo_plandepagos 
-set numero_credito= 'lib-0001737'
-where numero_credito= 'LIB-0001737';
-
-UPDATE XEO_PLANDEPAGOS
-SET TASA_EA=11.3510
-WHERE TASA_EA=113510.
-
-UPDATE XEO_PLANDEPAGOS
-SET MODO_PAGO='Trimestral'
-where modo_pago='TRIMESTREL';
 
 ---------------------------------------------------
 ----m_cli_liquidacion_cuota
@@ -91,8 +19,7 @@ WHEN s_tercero.naturalezajuridica='Juridica'
 END) || ' - ' || ' - Num.Credito:' || xh.numero_colocacion || '",(SELECT to_char(cast(coalesce(max(consecutivo),"0") as int)+1,"FM09999999") from m_cli_liquidacion_cuota));',xh.fecha_desembolso
 from xeo_historico xh
 inner join s_tercero on (xh.ced_cliente=s_tercero.numero)
-WHERE --(transaccion like '%VIGENTE%' or transaccion like '%CANCELADO%') and
-xh.fecha_desembolso IS NOT NULL
+WHERE xh.fecha_desembolso IS NOT NULL
 --AND  XH.NUMERO_COLOCACION IN ('CAR-193','LIB-0002879','LIB-0002892','LIB-0002894','LIB-0002896','LIB-0002900')
 
 order by xh.fecha_desembolso asc 
@@ -214,42 +141,6 @@ xpp.fecha_fin_credito,(case
 		when cast(pago_interes as int)=300 then 'Decamestral'
 		when cast(pago_interes as int)=360 then 'Anual'
 end)
-/*
-union 
-
-SELECT distinct
-'insert into m_cli_credito_aprobado (m_cli_detalle_aprobacionid,m_cli_clasificacion_creditoid,m_cli_etapa_cobroid,numerocredito,fecha,descripcion,consolidardeudas,tipoconsolidaciondeuda,estadocredito,estadoparaliquidacion,formadeextincion,plazoaprobado, costoamortizado,montoaprobado,periodogracia,formadepago,modalidadpago,numeroregistrodelcredito,fecharegistrodelcredito,diadepago,tipoamortizacion,tasainterespactada,tipotasainteres,modoliquidacioninteres,spread,m_cli_clienteid,m_cli_fuente_pagoid,creacion,valorcuota,fechafin,periodicidadintereses) values (1,2,2,"'|| 
-xh.numero_colocacion||'","'||
-xh.fecha_desembolso||'","'||
-xh.numero_colocacion||'",'||
-false||',"'||
-'No Aplica'||'","'||
-'Desembolsado'||'","'||
-'Normal'||'","'||
-(CASE 
-WHEN xh.transaccion='VIGENTE' 
-	THEN 'Vigente'
-WHEN xh.transaccion='CANCELADO' 
-	THEN 'PAGADO'
-END)||'",0,'||
-false ||','|| xh.valor_desembolso ||','||0||',"'||
-(CASE 
-WHEN xh.numero_colocacion like '%LIB%' THEN 'Descuento nómina'
-ELSE 'Efectivo' 
-END)||'","Mensual","'||xh.numero_colocacion||'","'||
-xh.fecha_desembolso||'",0,"'||
-(CASE 
-WHEN xh.numero_colocacion like '%LIB%' THEN 'Cuota creciente'
-ELSE 'Cuota constante' 
-END)||'",0,"Fijo","Vencido",0,'||
-m_cli_cliente.id||',2,"2017-01-01",0,"2016-12-31","Mensual");'
-from xeo_historico xh
---inner join xeo_plandepagos xpp on (xpp.numero_credito=xh.numero_colocacion and xpp.cuota=xh.cuota)
---inner join xeo_plandepagos xpp on (xpp.numero_credito=xh.numero_colocacion )
-inner join s_tercero on (xh.ced_cliente=s_tercero.numero)
-inner join m_cli_cliente on (s_tercero.id=m_cli_cliente.s_terceroid)
-where (transaccion like '%CANCELADO%')
-*/
 
 //////******************************
 
@@ -494,8 +385,7 @@ inner join
 		FROM XEO_HISTORICO
 		--WHERE numero_colocacion not in ('LIB-0002395','LIB-0002463','LIB-0002465','LIB-0002470','LIB-0002763')
 		GROUP BY NUMERO_COLOCACION
-		HAVING COUNT(COALESCE(CUOTA,'0'))=1
-	
+		HAVING COUNT(COALESCE(CUOTA,'0'))=1	
 	) xh
 		on (xh.numero_colocacion = xpp.numero_credito )
 inner join 
@@ -586,7 +476,6 @@ inner join
 		when modalidadpago='Anual' then  12
 		end) mesespago
 		from m_cli_credito_aprobado
-		--where upper(formadeextincion) like '%VIGENTE%'
 	) mcca
 		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
 
@@ -938,13 +827,12 @@ and ( formadeextincion='Pagado' or numerocredito in
 'LIB-0002888','LIB-0002890','LIB-0002892','LIB-0002893','LIB-0002894','LIB-0002895','LIB-0002896','LIB-0002897','LIB-0002898',
 'LIB-0002899','LIB-0002900','LIB-0002901','LIB-001926')
 );
-
 	
 update 	m_cli_detalle_liquidacion_cuota */
 set 	saldonuevocredito = coalesce(saldoactualcapital,0) 	+ 
-						coalesce(saldoactualcorriente,0) 			+ 
-						coalesce(saldoactualmoratorios,0) + 
-						coalesce(saldoactualseguro,0) 
+	coalesce(saldoactualcorriente,0) 			+ 
+	coalesce(saldoactualmoratorios,0) + 
+	coalesce(saldoactualseguro,0) 
 from  m_cli_credito_aprobado
 where m_cli_credito_aprobado.id=M_CLI_DETALLE_LIQUIDACION_CUOTA.m_cli_credito_aprobadoid
 and ( formadeextincion='Pagado' or numerocredito in 
@@ -1552,7 +1440,7 @@ from (select numero_colocacion,valor_desembolso,fecha_desembolso
 				'LIB-0002884','LIB-0002885','LIB-0002886','LIB-0002887',
 				'LIB-0002888','LIB-0002890','LIB-0002892','LIB-0002893',
 				'LIB-0002894','LIB-0002895','LIB-0002896','LIB-0002897',
-				'LIB-0002898','LIB-0002899','LIB-0002900','LIB-0002901'					)		
+				'LIB-0002898','LIB-0002899','LIB-0002900','LIB-0002901'	)	
 	) xh
 
 inner join 
