@@ -208,3 +208,25 @@ where tip_reliq in ('C','V','D','P')
 /*where PAGARE_M='LIB-0002257'
 and cuota_m=2*/
 
+--------------------------------------------
+Modificaciones de los tipos de transacciones
+---------------------------------------------
+update xeo_historico set transaccion='03' where transaccion='03-Int.';
+update xeo_historico set transaccion='11' where transaccion='11-Seguro';
+update xeo_historico set transaccion='08' where transaccion='08-Seguro';
+update xeo_historico set transaccion='01' where transaccion='01-Deuda';
+update xeo_historico set transaccion='06' where transaccion='06-Int.';
+update xeo_historico set transaccion='10' where transaccion='10-Seguro';
+update xeo_historico set transaccion='02' where transaccion='02-Mora';
+update xeo_historico set transaccion='04' where transaccion='04-Int.';
+update xeo_historico set transaccion='05' where transaccion='05-Int.';
+
+update xeo_historico set transaccion='03-Int. Causado' where transaccion='03';
+update xeo_historico set transaccion='11-Seguro Extraprima' where transaccion='11';
+update xeo_historico set transaccion='08-Seguro Prima' where transaccion='08';
+update xeo_historico set transaccion='01-Deuda' where transaccion='01';
+update xeo_historico set transaccion='06-Int. Contingente' where transaccion='06';
+update xeo_historico set transaccion='10-Seguro Prima SI' where transaccion='10';
+update xeo_historico set transaccion='02-Mora' where transaccion='02';
+update xeo_historico set transaccion='04-Int. Corriente' where transaccion='04';
+update xeo_historico set transaccion='05-Int. Anticipado' where transaccion='05';
