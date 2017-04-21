@@ -32,7 +32,7 @@ SELECT  trim(ccc.num_cre_cuo)  as credito,
         ccd.linea_desem AS SERVICIO_COLOCACION,
         ccd.valor_desem AS VALOR_DESEMBOLSO,
         ccd.cuo_ord_liq_desem AS NUMERO_CUOTAS, 
-        ccd.per_pag_i_desem AS PAGO_INTERES,
+        ccd.per_pag_i_desem AS PAGO_INTERES, 
         cast (ccd.pun_adi_tas_desem as numeric(15,3)) as PUNTOS_SPREAD,
         coalesce (cast( (power( 1 + (ccd.por_tasa_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) )-1 ) * 100 as numeric(15,4)) ,0) AS TASA_EA,//SE DEBE COMPARAR ESTE VALOR CON EL DE PLAN DE PAGOS PGADMIN --por_tasa_desem AS TASA,--TAS_PER_DESEM
         coalesce(CAST( (power (cast(1 + (cast( (power( 1 + (ccd.por_tasa_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) )-1 ) * 100 as numeric(15,12)))/100 as numeric(15,12)) ,cast(1/cast(12/(cast(ccd.per_pag_k_desem/30 as numeric(15,12)) )as numeric(15,12)) as numeric(15,12)) ) -1) * 12 * 100 AS numeric(15,3)),0) as TASA_PERIODO,
