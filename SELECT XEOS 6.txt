@@ -211,6 +211,12 @@ and cuota_m=2*/
 --------------------------------------------
 Modificaciones de los tipos de transacciones
 ---------------------------------------------
+
+UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Deuda' where transaccion='01';
+UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Mora' where transaccion='02';
+UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Int.' where transaccion in ('03','04','05','06');
+UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Seguro' where transaccion in ('08','10','11');
+
 update xeo_historico set transaccion='03' where transaccion='03-Int.';
 update xeo_historico set transaccion='11' where transaccion='11-Seguro';
 update xeo_historico set transaccion='08' where transaccion='08-Seguro';
