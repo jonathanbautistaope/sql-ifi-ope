@@ -924,6 +924,18 @@ SET
 	interesmoratorioperiodo=ROUND(((32.985/100)/360)*diasmora*saldoactualcapital)
 FROM M_CLI_LIQUIDACION_CUOTA MCLC
 WHERE MCLC.ID=MCDLC.M_CLI_LIQUIDACION_CUOTAID 
+
+
+-------------------------------------------------------------------------
+Subir los planes de pagos y el detalle 
+-------------------------------------------------------------------------
+insert into m_cli_plan_pagos (consecutivo,fecha,estado,descripcion,fechaanulacion,creacion)
+select consecutivo,fecha,estado,descripcion,null,creacion
+ from m_cli_liquidacion_cuota;
+ 
+
+ 
+
 						
 
 -------------------------------------------------------------------------
