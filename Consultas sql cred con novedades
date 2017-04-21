@@ -1,6 +1,29 @@
 Nota: se deben restringir las siguientes consultas para que los creditos afectados sean los que solo tienen novedades.
 
 
+---------------------------------------------------					
+----m_cli_detalle_liquidacion_cuota saldos actuales
+---------------------------------------------------
+	
+update	m_cli_detalle_liquidacion_cuota 
+set 	saldoactualcapital = coalesce(capitalperiodo,0)-coalesce(abonocapital,0) ;
+
+update 	m_cli_detalle_liquidacion_cuota 
+set 	saldoactualcorriente = coalesce(INTERESCORRIENTEPERIODO,0) -coalesce(ABONOCORRIENTE,0) ;
+
+update 	m_cli_detalle_liquidacion_cuota 
+set 	saldoactualmoratorios = coalesce(interesmoratorioperiodo,0) - coalesce(abonomoratorios,0) ;
+	
+update 	m_cli_detalle_liquidacion_cuota 
+set 	saldoactualseguro = coalesce(cuotaseguro,0) - coalesce(ABONOSEGURO,0);
+
+	
+update 	m_cli_detalle_liquidacion_cuota */
+set 	saldonuevocredito = coalesce(saldoactualcapital,0) 	+ 
+						coalesce(saldoactualcorriente,0) 			+ 
+						coalesce(saldoactualmoratorios,0) + 
+						coalesce(saldoactualseguro,0) ;
+						
 ---------------------------------------------------------------------------------------
 ----m_cli_detalle_comprobante_credito	con detalle liquidacion cuota igual a null					
 ---------------------------------------------------------------------------------------
