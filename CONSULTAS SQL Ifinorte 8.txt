@@ -933,7 +933,15 @@ insert into m_cli_plan_pagos (consecutivo,fecha,estado,descripcion,fechaanulacio
 select consecutivo,fecha,estado,descripcion,null,creacion
  from m_cli_liquidacion_cuota;
  
-
+ insert into m_cli_detalle_plan_pagos (m_cli_plan_pagosid,m_cli_credito_aprobadoid,numerocuota,inicioliquidacion,finliquidacion,fechapago,valorcuota,saldoanteriorcredito,saldoanteriorcapital,capitalperiodo,abonocapital,saldoactualcapital,saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,
+ interescorrienteperiodo,abonocorriente,saldoactualcorriente,saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,abonomoratorios,
+ saldoanteriorseguro,cuotaseguro,abonoseguro,saldoactualseguro,saldoanteriorotros,cuotaotros,abonootros,saldoactualotros,saldonuevocredito,creacion)
+select  mcpp.id,m_cli_credito_aprobadoid,numerocuota,inicioliquidacion,finliquidacion,fechapago,mcdlc.valorcuota,saldoanteriorcredito,saldoanteriorcapital,capitalperiodo,abonocapital,saldoactualcapital,saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,
+ interescorrienteperiodo,abonocorriente,saldoactualcorriente,saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,abonomoratorios,
+ saldoanteriorseguro,cuotaseguro,abonoseguro,saldoactualseguro,saldoanteriorotros,cuotaotros,abonootros,saldoactualotros,saldonuevocredito,mcdlc.creacion
+from m_cli_detalle_liquidacion_cuota mcdlc
+inner join m_cli_credito_aprobado mcca on (mcdlc.m_cli_credito_aprobadoid=mcca.id) 
+inner join m_cli_plan_pagos mcpp on (mcca.numerocredito=substring(mcpp.descripcion from position ('Num.Credito:' in mcpp.descripcion)+12 for char_length(mcpp.descripcion)));
  
 
 						
