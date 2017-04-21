@@ -274,14 +274,6 @@ set  m_cli_detalle_aprobacionid =6
 where position ('CAR' in NUMEROCREDITO)>0;
 
 
-//****Updates historico tipo transaccion
-
-UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Deuda' where transaccion='01';
-UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Mora' where transaccion='02';
-UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Int.' where transaccion in ('03','04','05','06');
-UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Seguro' where transaccion in ('08','10','11');
-
-
 ---------------------------------------------------
 ----m_cli_detalle_liquidacion_cuota
 ---------------------------------------------------
@@ -1022,6 +1014,8 @@ and ( formadeextincion='Pagado' or numerocredito in
 
 Este proceso es para los que tienen MORA.
 
+El proceso de los que tienen mora seran calculados a partir de una fecha dada en el sistema.
+
 Ejecutar los archivos de TOTAL - MORA (correo electrónico).
 
  
@@ -1172,36 +1166,6 @@ inner join
 	from m_cli_comprobante_credito) mccc
 		on (trim(xh.numero_colocacion) = trim(mccc.credito) and (mccc.fecha=xh.fecha_movimiento))
 					
----------------------------------------------------------------------------------------
-----m_cli_detalle_comprobante_credito	con detalle liquidacion cuota igual a null					
----------------------------------------------------------------------------------------
-
-select 
-'insert into m_cli_detalle_comprobante_credito 
-(m_cli_comprobante_creditoid,m_cli_credito_aprobadoid,creacion,m_cli_detalle_liquidacion_cuotaid,descripcion,valor)
-values 
-('||mccc.id||','||mcca.id||',"'||'01-01-2017'||'",null,"'||mccc.descripcion||'",'||xh.valor||');'
-from
-(select numero_colocacion,fecha_movimiento,cuota,sum(coalesce(valor_transaccion,0)) valor
-from xeo_historico
-where (upper(transaccion) not like ('%VIGENTE%') 
-and upper(transaccion) not like ('%CANCELADO%'))
-group by 1,2,3) xh
-inner join 
-	(select id,numerocredito
-		from m_cli_credito_aprobado
-		where upper(formadeextincion) like '%VIGENTE%'
-	) mcca
-		on (trim(mcca.numerocredito)=trim(xh.numero_colocacion) )
-inner join 
-	(select 
-	descripcion,substring(descripcion from position ('Num.Credito:' in descripcion)+12 for char_length(descripcion)) as credito,id,
-	fecha
-	from m_cli_comprobante_credito) mccc
-		on (trim(xh.numero_colocacion) = trim(mccc.credito) and (mccc.fecha=xh.fecha_movimiento))
-		
-
-
 
 ------------------------------------------------------------------------------------------------
 ----m_cli_kardex_credito los cred.que se encuentran sin negativos y los pagados
@@ -1601,28 +1565,6 @@ select * from m_cli_kardex_credito
 order by m_cli_credito_aprobadoid
 
 			 
----------------------------------------------------			 
----- m_cli_kardex_credito 1. --acumuladomoragenerada viene de detalle liquidacion cuota.
----------------------------------------------------
-/*update 
-	m_cli_kardex_credito
-set
-	acumuladomoragenerada = 	
-					coalesce((select 
-						sum(k1.acumuladomoragenerada) 
-					from 
-						m_cli_kardex_credito k1
-					inner join m_cli_detalle_liquidacion_cuota dlc1 
-							on ( k1.m_cli_detalle_liquidacion_cuotaid=dlc1.id)
-					where 
-						k1.m_cli_credito_aprobadoid = m_cli_kardex_credito.m_cli_credito_aprobadoid
-					and 
-						dlc1.numerocuota<=dlc2.numerocuota
-					and 
-						k1.FECHATRANSACCION<=m_cli_kardex_credito.FECHATRANSACCION ),0)
-						
-from m_cli_detalle_liquidacion_cuota dlc2
-where ( m_cli_kardex_credito.m_cli_detalle_liquidacion_cuotaid=dlc2.id)*/
 
 ---------------------------------------------------
 ---- m_cli_kardex_credito 2.
@@ -1647,30 +1589,6 @@ set
 from m_cli_detalle_liquidacion_cuota dlc2
 where ( m_cli_kardex_credito.m_cli_detalle_liquidacion_cuotaid=dlc2.id)
 
----------------------------------------------------
----- m_cli_kardex_credito 3.
----------------------------------------------------
-/*
-No se debe realizar debido a que ya viene dado desde plan de pagos.
-update 
-	m_cli_kardex_credito
-set
-	acumuladocorrientegenerado = 	
-					coalesce((select 
-						sum(k1.acumuladocorrientegenerado) 
-					from 
-						m_cli_kardex_credito k1
-					inner join m_cli_detalle_liquidacion_cuota dlc1 
-							on ( k1.m_cli_detalle_liquidacion_cuotaid=dlc1.id)
-					where 
-						k1.m_cli_credito_aprobadoid = m_cli_kardex_credito.m_cli_credito_aprobadoid
-					and 
-						dlc1.numerocuota<=dlc2.numerocuota
-					and 
-						k1.FECHATRANSACCION<=m_cli_kardex_credito.FECHATRANSACCION ),0)
-						
-from m_cli_detalle_liquidacion_cuota dlc2
-where ( m_cli_kardex_credito.m_cli_detalle_liquidacion_cuotaid=dlc2.id)*/
 
 ---------------------------------------------------
 ---- m_cli_kardex_credito 4.
@@ -1695,28 +1613,7 @@ set
 from m_cli_detalle_liquidacion_cuota dlc2
 where ( m_cli_kardex_credito.m_cli_detalle_liquidacion_cuotaid=dlc2.id)
 
----------------------------------------------------
----- m_cli_kardex_credito 5.
----------------------------------------------------
-/*update 
-	m_cli_kardex_credito
-set
-	acumuladocuotaseguro = 	
-					coalesce((select 
-						sum(k1.acumuladocuotaseguro) 
-					from 
-						m_cli_kardex_credito k1
-					inner join m_cli_detalle_liquidacion_cuota dlc1 
-							on ( k1.m_cli_detalle_liquidacion_cuotaid=dlc1.id)
-					where 
-						k1.m_cli_credito_aprobadoid = m_cli_kardex_credito.m_cli_credito_aprobadoid
-					and 
-						dlc1.numerocuota<=dlc2.numerocuota
-					and 
-						k1.FECHATRANSACCION<=m_cli_kardex_credito.FECHATRANSACCION),0)
-						
-from m_cli_detalle_liquidacion_cuota dlc2
-where ( m_cli_kardex_credito.m_cli_detalle_liquidacion_cuotaid=dlc2.id)*/
+
 
 ---------------------------------------------------
 ---- m_cli_kardex_credito 6.
@@ -1741,28 +1638,7 @@ set
 from m_cli_detalle_liquidacion_cuota dlc2
 where ( m_cli_kardex_credito.m_cli_detalle_liquidacion_cuotaid=dlc2.id)
 
----------------------------------------------------
----- m_cli_kardex_credito 7.
----------------------------------------------------
-/*update 
-	m_cli_kardex_credito
-set
-	acumuladocargocapital = 	
-					coalesce((select 
-						sum(k1.acumuladocargocapital) 
-					from 
-						m_cli_kardex_credito k1
-					inner join m_cli_detalle_liquidacion_cuota dlc1 
-							on ( k1.m_cli_detalle_liquidacion_cuotaid=dlc1.id)
-					where 
-						k1.m_cli_credito_aprobadoid = m_cli_kardex_credito.m_cli_credito_aprobadoid
-					and 
-						dlc1.numerocuota<=dlc2.numerocuota
-					and 
-						k1.FECHATRANSACCION<=m_cli_kardex_credito.FECHATRANSACCION),0)
-						
-from m_cli_detalle_liquidacion_cuota dlc2
-where ( m_cli_kardex_credito.m_cli_detalle_liquidacion_cuotaid=dlc2.id)*/
+
 
 ---------------------------------------------------
 ---- m_cli_kardex_credito 8.
@@ -1853,19 +1729,6 @@ inner join
 		on (mckc.m_cli_detalle_comprobante_creditoid=mcdcc.id
 			and mckc.m_cli_credito_aprobadoid=mcca.id
 			and mckc.m_cli_detalle_liquidacion_cuotaid=mcdlc.id)
-
-						
-						
-////Delete tablas
-//delete from m_cli_kardex_cuota;
-//delete from m_cli_kardex_credito;
-//delete from m_cli_detalle_comprobante_credito;
-//delete from m_cli_detalle_liquidacion_cuota;
-//delete from m_cli_comprobante_credito;
-//delete from m_cli_liquidacion_cuota;
-//delete from m_cli_credito_aprobado;
-//DELETE FROM XEO_HISTORICO
-//DELETE FROM XEO_PLANDEPAGOS
 
 //***************************************************************************************************************************
 // verificar la informacion que se encuentra en detalle_liquidacion_cuota, para revision de saldos actuales de los creditos.
