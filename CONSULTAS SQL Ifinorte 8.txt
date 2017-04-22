@@ -494,10 +494,8 @@ AND CAST(COALESCE(xpp.cuota,'0') AS INTEGER)=0
 
 -------------------------------------------------------------------------------
 Todos los creditos se cargan el valor que pago en el valor y en el abono
--------------------------------------------------------------------------------
----------------------------------------------------
 ----m_cli_detalle_liquidacion_cuota PARA SUBIR EL PLAN DE PAGOS
----------------------------------------------------
+-------------------------------------------------------------------------------
 
 SELECT --Solo las cuotas que tienen movimiento en el historico
 	'insert into m_cli_detalle_liquidacion_cuota (m_cli_liquidacion_cuotaid,m_cli_credito_aprobadoid,
@@ -525,7 +523,7 @@ abonoseguro) values ('||mclc.id||','||--m_cli_liquidacion_cuotaid
 	coalesce(xh.interes_corriente,0) ||','||--interescorrienteperiodo
 	0 ||','||--saldoactualcorriente 
 	0 ||','||--Saldo anterior moratorio , tabla diana
-	dd_mora ||','||--dias mora, tabla diana
+	xh.dd_mora ||','||--dias mora, tabla diana
 	coalesce(xh.mora,0)||','||--interesmoratorioperiodo
 	0 ||','||--porcentajemora
 	0 ||','||--saldoactualmoratorios
@@ -557,9 +555,6 @@ inner join
 			then valor_transaccion end ) mora,
 		sum(case
 		when POSITION( 'Mora' IN transaccion)>0  
-			then dd end ) mora,
-		sum(case
-		when POSITION( '02' IN transaccion)>0  
 			then cast(dd as integer) end ) dd_mora,
 		sum(saldo_capital)
 		from xeo_historico
