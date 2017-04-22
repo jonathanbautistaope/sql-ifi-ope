@@ -492,13 +492,31 @@ where mcca.numerocredito IN (
 'CAR-188*','CAR-189','CAR-191','FAC-101','FAC-102','FAC-103','FAC-104','FAC-105','FAC-106*','FAC-107','FAC-108','FAC-109')
 AND CAST(COALESCE(xpp.cuota,'0') AS INTEGER)=0
 
+
+-------------------------------------------------------------------------
+Subir los planes de pagos y el detalle 
+-------------------------------------------------------------------------
+insert into m_cli_plan_pagos (consecutivo,fecha,estado,descripcion,fechaanulacion,creacion)
+select consecutivo,fecha,estado,descripcion,null,creacion
+ from m_cli_liquidacion_cuota;
+ 
+ insert into m_cli_detalle_plan_pagos (m_cli_plan_pagosid,m_cli_credito_aprobadoid,numerocuota,inicioliquidacion,finliquidacion,fechapago,valorcuota,saldoanteriorcredito,saldoanteriorcapital,capitalperiodo,abonocapital,saldoactualcapital,saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,
+ interescorrienteperiodo,abonocorriente,saldoactualcorriente,saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,abonomoratorios,
+ saldoanteriorseguro,cuotaseguro,abonoseguro,saldoactualseguro,saldoanteriorotros,cuotaotros,abonootros,saldoactualotros,saldonuevocredito,creacion)
+select  mcpp.id,m_cli_credito_aprobadoid,numerocuota,inicioliquidacion,finliquidacion,fechapago,mcdlc.valorcuota,saldoanteriorcredito,saldoanteriorcapital,capitalperiodo,abonocapital,saldoactualcapital,saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,
+ interescorrienteperiodo,abonocorriente,saldoactualcorriente,saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,abonomoratorios,
+ saldoanteriorseguro,cuotaseguro,abonoseguro,saldoactualseguro,saldoanteriorotros,cuotaotros,abonootros,saldoactualotros,saldonuevocredito,mcdlc.creacion
+from m_cli_detalle_liquidacion_cuota mcdlc
+inner join m_cli_credito_aprobado mcca on (mcdlc.m_cli_credito_aprobadoid=mcca.id) 
+inner join m_cli_plan_pagos mcpp on (mcca.numerocredito=substring(mcpp.descripcion from position ('Num.Credito:' in mcpp.descripcion)+12 for char_length(mcpp.descripcion)));
+
+
 -------------------------------------------------------------------------------
 Todos los creditos se cargan el valor que pago en el valor y en el abono
-----m_cli_detalle_liquidacion_cuota PARA SUBIR EL PLAN DE PAGOS
+----m_cli_detalle_liquidacion_cuota 
 -------------------------------------------------------------------------------
 
-SELECT --Solo las cuotas que tienen movimiento en el historico
-	'insert into m_cli_detalle_liquidacion_cuota (m_cli_liquidacion_cuotaid,m_cli_credito_aprobadoid,
+insert into m_cli_detalle_liquidacion_cuota (m_cli_liquidacion_cuotaid,m_cli_credito_aprobadoid,
 numerocuota,inicioliquidacion,
 finliquidacion,fechapago,
 saldoanteriorcredito,valorcuota,
@@ -506,36 +524,37 @@ saldoanteriorcapital,capitalperiodo,saldoactualcapital,
 saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,interescorrienteperiodo,saldoactualcorriente,
 saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,saldoactualmoratorios,cuotaseguro,
 saldoactualseguro,saldonuevocredito,creacion,saldoanteriorseguro,abonocapital,abonocorriente,abonomoratorios,
-abonoseguro) values ('||mclc.id||','||--m_cli_liquidacion_cuotaid
-	mcca.id ||',"'||--m_cli_credito_aprobadoid
-	xpp.cuota ||'","'||--numerocuota
-	To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd')||'","'||--inicioliquidacion
-	xpp.fecha_vencimiento||'","'||--finliquidacion
-	To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd')||'",'||--fechapago
-	0 ||','||--saldoanteriorcredito
-	coalesce(xpp.valor_capital,0)+coalesce(xpp.valor_interes,0)||','||--valorcuota
-	0 ||','||--saldoanteriorcapital
-	coalesce(xh.deuda,0) ||','||--capitalperiodo
-	0||','||--saldoactualcapital
-	0||',"'||--saldoanteriorcorrientes
-	xpp.pago_interes||'",'||--diasinterescorriente
-	coalesce(xpp.tasa_periodo,0) ||','||--porcentajecorriente
-	coalesce(xh.interes_corriente,0) ||','||--interescorrienteperiodo
-	0 ||','||--saldoactualcorriente 
-	0 ||','||--Saldo anterior moratorio , tabla diana
-	xh.dd_mora ||','||--dias mora, tabla diana
-	coalesce(xh.mora,0)||','||--interesmoratorioperiodo
-	0 ||','||--porcentajemora
-	0 ||','||--saldoactualmoratorios
-	coalesce(xh.seguro,0)  ||','||--cuotaseguro
-	0 ||','||--saldoactualseguro
-	0 ||',"'|| --saldonuevocredito
-	'01-01-2017'||'",'||--creacion
-	0 || ','||--saldoanteriorseguro
-	coalesce(xh.deuda,0) ||','||--abonocapital
-	coalesce(xh.interes_corriente,0) ||','||--abonocorriente
-	coalesce(xh.mora,0) ||','||--abonomoratorios
-	coalesce(xh.seguro,0) ||');'--abonoseguro
+abonoseguro)
+SELECT mclc.id,--m_cli_liquidacion_cuotaid
+	mcca.id ,--m_cli_credito_aprobadoid
+	cast (xpp.cuota as integer) ,--numerocuota
+	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'),'yyyy-mm-dd'),--inicioliquidacion
+	xpp.fecha_vencimiento,--finliquidacion
+	to_date(To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd'),'yyyy-mm-dd'),--fechapago
+	0 ,--saldoanteriorcredito
+	coalesce(xpp.valor_capital,0)+coalesce(xpp.valor_interes,0),--valorcuota
+	0 ,--saldoanteriorcapital
+	coalesce(xh.deuda,0),--capitalperiodo
+	0,--saldoactualcapital
+	0,--saldoanteriorcorrientes
+	cast(xpp.pago_interes as integer),--diasinterescorriente
+	coalesce(xpp.tasa_periodo,0) ,--porcentajecorriente
+	coalesce(xh.interes_corriente,0) ,--interescorrienteperiodo
+	0 ,--saldoactualcorriente 
+	0 ,--Saldo anterior moratorio , tabla diana
+	coalesce(xh.dd_mora,0) ,--dias mora, tabla diana
+	coalesce(xh.mora,0),--interesmoratorioperiodo
+	0 ,--porcentajemora
+	0 ,--saldoactualmoratorios
+	coalesce(xh.seguro,0)  ,--cuotaseguro
+	0 ,--saldoactualseguro
+	0 , --saldonuevocredito
+	to_date('01-01-2017','yyyy-mm-dd'),--creacion
+	0 ,--saldoanteriorseguro
+	coalesce(xh.deuda,0) ,--abonocapital
+	coalesce(xh.interes_corriente,0) ,--abonocorriente
+	coalesce(xh.mora,0) ,--abonomoratorios
+	coalesce(xh.seguro,0) --abonoseguro
 from 	
 	xeo_plandepagos xpp
 inner join 
@@ -543,20 +562,20 @@ inner join
 		select ced_cliente,numero_colocacion,cuota,--valor_desembolso,
 		SUM(case
 		when POSITION( 'Int.' IN transaccion)>0
-			then VALOR_TRANSACCION end)  interes_corriente,
+			then coalesce(VALOR_TRANSACCION,0) end)  interes_corriente,
 		sum(case
 		when POSITION( 'Seguro' IN transaccion)>0 
-			then valor_transaccion end ) seguro,
+			then coalesce(valor_transaccion,0) end ) seguro,
 		sum(case
 		when POSITION( 'Deuda' IN transaccion)>0  
-			then valor_transaccion end ) deuda,
+			then coalesce(valor_transaccion,0) end ) deuda,
 		sum(case
 		when POSITION( 'Mora' IN transaccion)>0  
-			then valor_transaccion end ) mora,
+			then coalesce(valor_transaccion,0) end ) mora,
 		sum(case
 		when POSITION( 'Mora' IN transaccion)>0  
 			then cast(dd as integer) end ) dd_mora,
-		sum(saldo_capital)
+		sum(coalesce(saldo_capital,0))
 		from xeo_historico
 		where cuota is not null
 		group by 1,2,3--,4
@@ -588,51 +607,36 @@ inner join
 		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
 union
 SELECT --Las cuotas que no tienen movimiento en el historico
-	'insert into m_cli_detalle_liquidacion_cuota (
-	m_cli_liquidacion_cuotaid,	m_cli_credito_aprobadoid,
-	numerocuota,	inicioliquidacion,
-	finliquidacion,	fechapago,
-	saldoanteriorcredito,	valorcuota,
-	saldoanteriorcapital,	capitalperiodo,
-	saldoactualcapital,	saldoanteriorcorrientes,
-	diasinterescorriente, porcentajecorriente,
-	interescorrienteperiodo, saldoactualcorriente,
-	saldoanteriormoratorios, diasmora,
-	interesmoratorioperiodo, porcentajemora,
-	saldoactualmoratorios, cuotaseguro,
-	saldoactualseguro, saldonuevocredito,
-	creacion, saldoanteriorseguro,
-	abonocapital, abonocorriente,
-	abonomoratorios, abonoseguro) values ('||mclc.id||','|| 	--mclc.id
-	mcca.id ||',"'||		--mca.id
-	xpp.cuota ||'","'||		--numerocuota
-	To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd')||'","'||	--inicioliquidacion
-	xpp.fecha_vencimiento||'","'||		--finliquidacion
-	To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd')||'",'||	--fechapago
-	0 ||','||		--saldoanteriorcredito
-	coalesce(xpp.valor_capital,0)+coalesce(xpp.valor_interes,0) ||','||	--valorcuota
-	0 ||','||	--saldoanteriorcapital
-	coalesce(xpp.valor_capital,0) ||','||	--capitalperiodo
-	coalesce(xpp.valor_capital,0) ||','||	--saldoactualcapital
-	0 ||',"'||	--saldoanteriorcorrientes
-	xpp.pago_interes||'",'||--diasinterescorriente
-	coalesce(xpp.tasa_periodo,0)  ||','||	--porcentajecorriente
-	coalesce(xpp.valor_interes,0) ||','||	--interescorrienteperiodo
-	0 ||','|| 			--saldoactualcorriente
-	0 ||','|| 			--saldoanteriormoratorios
-	0 ||','|| 			--dias mora, tabla diana
-	0 ||','||			--interesmoratorioperiodo
-	0 ||','||			--porcentajemora
-	0 ||','||			--saldoactualmoratorios
-	coalesce(valor_seguro,0)     ||','||	--cuotaseguro
-	0 ||','||								--saldoactualseguro
-	0 ||',"'|| 								--saldonuevocredito
-	'01-01-2017'||'",'||					--creacion
-	0 || ','||								--saldoanteriorseguro
-	0 ||','||								--abonocapital
-	0 ||','||								--abonocorriente
-	0 ||','||								--abonomoratorios
-	0 ||');'								--abonoseguro
+	mclc.id, 	--mclc.id
+	mcca.id ,		--mca.id
+	cast (xpp.cuota as integer) ,		--numerocuota
+	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'),'yyyy-mm-dd'),	--inicioliquidacion
+	xpp.fecha_vencimiento,		--finliquidacion
+	to_date(To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd'),'yyyy-mm-dd'),	--fechapago
+	0 ,		--saldoanteriorcredito
+	coalesce(xpp.valor_capital,0)+coalesce(xpp.valor_interes,0) ,	--valorcuota
+	0 ,	--saldoanteriorcapital
+	coalesce(xpp.valor_capital,0) ,	--capitalperiodo
+	coalesce(xpp.valor_capital,0) ,	--saldoactualcapital
+	0 ,	--saldoanteriorcorrientes
+	cast(xpp.pago_interes as integer),--diasinterescorriente
+	coalesce(xpp.tasa_periodo,0)  ,	--porcentajecorriente
+	coalesce(xpp.valor_interes,0) ,	--interescorrienteperiodo
+	0 , 			--saldoactualcorriente
+	0 ,--saldoanteriormoratorios
+	0 ,--dias mora, tabla diana
+	0 ,--interesmoratorioperiodo
+	0 ,--porcentajemora
+	0 ,--saldoactualmoratorios
+	coalesce(valor_seguro,0),--cuotaseguro
+	0 ,						--saldoactualseguro
+	0 ,--saldonuevocredito
+	to_date('01-01-2017','yyyy-mm-dd'),--creacion
+	0 ,								--saldoanteriorseguro
+	0 ,--abonocapital
+	0 ,--abonocorriente
+	0 ,--abonomoratorios
+	0 --abonoseguro
 from
 	xeo_plandepagos xpp
 inner join 
@@ -669,45 +673,36 @@ inner join
 		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
 UNION
 SELECT  --para aquellos creditos que solo tienen una cuota a pagar
-	'insert into m_cli_detalle_liquidacion_cuota (m_cli_liquidacion_cuotaid,m_cli_credito_aprobadoid,
-numerocuota,inicioliquidacion,
-finliquidacion,fechapago,
-saldoanteriorcredito,valorcuota,
-saldoanteriorcapital,capitalperiodo,saldoactualcapital,
-saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,interescorrienteperiodo,saldoactualcorriente,
-saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,saldoactualmoratorios,cuotaseguro,
-saldoactualseguro,saldonuevocredito,creacion,saldoanteriorseguro,abonocapital,abonocorriente,abonomoratorios,
-abonoseguro) values ('||
-	mclc.id||','||
-	mcca.id ||',"'||
-	xpp.cuota ||'","'||
-	To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd')||'","'||
-	xpp.fecha_vencimiento||'","'||
-	To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd')||'",'||
-	0||','||--saldoanteriorcredito
-	coalesce(xpp.valor_capital,0) + coalesce(xpp.valor_interes,0) ||','||--valorcuota
-	0 ||','||--saldoanteriorcapital
-	coalesce(xpp.valor_capital,0) ||','||--capitalperiodo
-	coalesce(xpp.valor_capital,0) ||','||--saldoactualcapital
-	0 ||',"'||--saldoanteriorcorrientes
-	xpp.pago_interes	      ||'",'||--diasinterescorriente
-	coalesce(xpp.tasa_periodo,0)  ||','||--porcentajecorriente
-	coalesce(xpp.valor_interes,0) ||','||--interescorrienteperiodo
-	0 ||','|| --saldoactualcorriente
-	0 ||','|| --Saldo anterior moratorio , tabla diana
-	0 ||','|| --diasmora
-	0 ||','|| --interesmoratorioperiodo
-	0 ||','|| --porcentajemora
-	0 ||','|| --saldoactualmoratorios
-	coalesce(valor_seguro,0)     ||','|| --cuotaseguro
-	0||','|| --saldoactualseguro
-	0 ||',"'|| --saldonuevocredito
-	'01-01-2017'||'",'|| --creacion
-	0 || ','|| -- saldoanteriorseguro
-	0 ||','|| --abonocapital
-	0 ||','|| --abonocorriente
-	0 ||','|| --abonomoratorios
-	0 ||');' --abonoseguro
+	mclc.id,
+	mcca.id ,
+	cast(xpp.cuota as integer) ,
+	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'),'yyyy-mm-dd'),
+	xpp.fecha_vencimiento,
+	to_date(To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd'),'yyyy-mm-dd'),
+	0,--saldoanteriorcredito
+	coalesce(xpp.valor_capital,0) + coalesce(xpp.valor_interes,0) ,--valorcuota
+	0 ,--saldoanteriorcapital
+	coalesce(xpp.valor_capital,0) , --capitalperiodo
+	coalesce(xpp.valor_capital,0) , --saldoactualcapital
+	0 ,--saldoanteriorcorrientes
+	cast(xpp.pago_interes as integer)      ,--diasinterescorriente
+	coalesce(xpp.tasa_periodo,0)  ,--porcentajecorriente
+	coalesce(xpp.valor_interes,0) ,--interescorrienteperiodo
+	0 ,--saldoactualcorriente
+	0 ,--Saldo anterior moratorio , tabla diana
+	0 ,--diasmora
+	0 ,--interesmoratorioperiodo
+	0 ,--porcentajemora
+	0 ,--saldoactualmoratorios
+	coalesce(valor_seguro,0)    ,--cuotaseguro
+	0,--saldoactualseguro
+	0 ,--saldonuevocredito
+	to_date('01-01-2017','yyyy-mm-dd'), --creacion
+	0 , -- saldoanteriorseguro
+	0 , --abonocapital
+	0 , --abonocorriente
+	0 , --abonomoratorios
+	0 --abonoseguro
 from
 	xeo_plandepagos xpp
 inner join 
@@ -746,44 +741,36 @@ inner join
 UNION
 SELECT --Solo los creditos que tienen cuota cero y que ya tienen un movimiento en historico; los que son nuevos se crean en otro select
 	--adicionalmente el saldo del interes es cero por que se le descuenta total del credito.
-	'insert into m_cli_detalle_liquidacion_cuota (m_cli_liquidacion_cuotaid,m_cli_credito_aprobadoid,
-numerocuota,inicioliquidacion,
-finliquidacion,fechapago,
-saldoanteriorcredito,valorcuota,
-saldoanteriorcapital,capitalperiodo,saldoactualcapital,
-saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,interescorrienteperiodo,saldoactualcorriente,
-saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,saldoactualmoratorios,cuotaseguro,
-saldoactualseguro,saldonuevocredito,creacion,saldoanteriorseguro,abonocapital,abonocorriente,abonomoratorios,
-abonoseguro) values ('||mclc.id||','||--m_cli_liquidacion_cuotaid
-	mcca.id ||',"'||--m_cli_credito_aprobadoid
-	xpp.cuota ||'","'||--numerocuota
-	To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd')||'","'||--inicioliquidacion
-	xpp.fecha_vencimiento||'","'||--finliquidacion
-	To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd')||'",'||--fechapago
-	0 ||','||--saldoanteriorcredito
-	coalesce(xpp.valor_capital,0)+coalesce(xpp.valor_interes,0)||','||--valorcuota
-	0 ||','||--saldoanteriorcapital
-	coalesce(xpp.valor_capital,0) ||','||--capitalperiodo
-	coalesce(xpp.valor_capital,0)-0 ||','||--coalesce(xpp.valor_capital,0)-coalesce(xh.deuda,0) ||','||--saldoactualcapital
-	0||',"'||--saldoanteriorcorrientes
-	xpp.pago_interes||'",'||--diasinterescorriente
-	coalesce(xpp.tasa_periodo,0) ||','||--porcentajecorriente
-	coalesce(xpp.valor_interes,0) ||','||--interescorrienteperiodo
-	0 ||','||--saldoactualcorriente 
-	0 ||','||--Saldo anterior moratorio , tabla diana
-	0 ||','||--dias mora, tabla diana
-	0 ||','||--interesmoratorioperiodo
-	0 ||','||--porcentajemora
-	0 ||','||--saldoactualmoratorios
-	0 ||','||--cuotaseguro
-	0 ||','||--saldoactualseguro
-	0 ||',"'|| --saldonuevocredito
-	'01-01-2017'||'",'||--creacion
-	0 || ','||--saldoanteriorseguro
-	0 ||','||--abonocapital
-	0 ||','||--abonocorriente
-	0 ||','||--abonomoratorios
-	0 ||');'--abonoseguro
+	mclc.id,--m_cli_liquidacion_cuotaid
+	mcca.id ,--m_cli_credito_aprobadoid
+	cast(xpp.cuota as integer) ,--numerocuota
+	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'),'yyyy-mm-dd'),--inicioliquidacion
+	xpp.fecha_vencimiento, --finliquidacion
+	to_date(To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd'),'yyyy-mm-dd') , --fechapago
+	0 , --saldoanteriorcredito
+	coalesce(xpp.valor_capital,0)+coalesce(xpp.valor_interes,0) , --valorcuota
+	0 , --saldoanteriorcapital
+	coalesce(xpp.valor_capital,0) , --capitalperiodo
+	coalesce(xpp.valor_capital,0) ,--coalesce(xpp.valor_capital,0)-coalesce(xh.deuda,0) ||','||--saldoactualcapital
+	0, --saldoanteriorcorrientes
+	cast(xpp.pago_interes as integer), --diasinterescorriente
+	coalesce(xpp.tasa_periodo,0) , --porcentajecorriente
+	coalesce(xpp.valor_interes,0) , --interescorrienteperiodo
+	0 , --saldoactualcorriente 
+	0 , --Saldo anterior moratorio , tabla diana
+	0 , --dias mora, tabla diana
+	0 , --interesmoratorioperiodo
+	0 , --porcentajemora
+	0 , --saldoactualmoratorios
+	0 , --cuotaseguro
+	0 , --saldoactualseguro
+	0 , --saldonuevocredito
+	to_date('01-01-2017','yyyy-mm-dd'), --creacion
+	0 ,--saldoanteriorseguro
+	0 ,--abonocapital
+	0 ,--abonocorriente
+	0 ,--abonomoratorios
+	0 --abonoseguro
 from 	
 	xeo_plandepagos xpp
 inner join 
@@ -825,8 +812,7 @@ AND CAST(COALESCE(xpp.cuota,'0') AS INTEGER)=0
 
 //***************************************************************************************************************************
 //***************************************************************************************************************************
-// Esto es solo para los creditos que se encuentran cancelados o creditos que no tienen ningun negativo en sus registros o que no se
-// encuentran en mora.
+//Para hallar los saldos actuales de todas las cuotas.
 //***************************************************************************************************************************
 //***************************************************************************************************************************
 
@@ -837,7 +823,7 @@ update	m_cli_detalle_liquidacion_cuota
 set 	saldoactualcapital = coalesce(capitalperiodo,0)-coalesce(abonocapital,0) ;
 
 update 	m_cli_detalle_liquidacion_cuota 
-set 	saldoactualcorriente = coalesce(INTERESCORRIENTEPERIODO,0) -coalesce(ABONOCORRIENTE,0) );
+set 	saldoactualcorriente = coalesce(INTERESCORRIENTEPERIODO,0) -coalesce(ABONOCORRIENTE,0) ;
 
 update 	m_cli_detalle_liquidacion_cuota 
 set 	saldoactualmoratorios = coalesce(interesmoratorioperiodo,0) - coalesce(abonomoratorios,0) ;
@@ -862,7 +848,6 @@ El proceso de los que tienen mora seran calculados a partir de una fecha dada en
 
 Ejecutar los archivos de TOTAL - MORA (correo electrónico).
 
- 
 //////*********************************************
 //////***************************************
 //////******************************
@@ -882,22 +867,39 @@ FROM M_CLI_LIQUIDACION_CUOTA MCLC
 WHERE MCLC.ID=MCDLC.M_CLI_LIQUIDACION_CUOTAID 
 
 
--------------------------------------------------------------------------
-Subir los planes de pagos y el detalle 
--------------------------------------------------------------------------
-insert into m_cli_plan_pagos (consecutivo,fecha,estado,descripcion,fechaanulacion,creacion)
-select consecutivo,fecha,estado,descripcion,null,creacion
- from m_cli_liquidacion_cuota;
- 
- insert into m_cli_detalle_plan_pagos (m_cli_plan_pagosid,m_cli_credito_aprobadoid,numerocuota,inicioliquidacion,finliquidacion,fechapago,valorcuota,saldoanteriorcredito,saldoanteriorcapital,capitalperiodo,abonocapital,saldoactualcapital,saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,
- interescorrienteperiodo,abonocorriente,saldoactualcorriente,saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,abonomoratorios,
- saldoanteriorseguro,cuotaseguro,abonoseguro,saldoactualseguro,saldoanteriorotros,cuotaotros,abonootros,saldoactualotros,saldonuevocredito,creacion)
-select  mcpp.id,m_cli_credito_aprobadoid,numerocuota,inicioliquidacion,finliquidacion,fechapago,mcdlc.valorcuota,saldoanteriorcredito,saldoanteriorcapital,capitalperiodo,abonocapital,saldoactualcapital,saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,
- interescorrienteperiodo,abonocorriente,saldoactualcorriente,saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,abonomoratorios,
- saldoanteriorseguro,cuotaseguro,abonoseguro,saldoactualseguro,saldoanteriorotros,cuotaotros,abonootros,saldoactualotros,saldonuevocredito,mcdlc.creacion
-from m_cli_detalle_liquidacion_cuota mcdlc
-inner join m_cli_credito_aprobado mcca on (mcdlc.m_cli_credito_aprobadoid=mcca.id) 
-inner join m_cli_plan_pagos mcpp on (mcca.numerocredito=substring(mcpp.descripcion from position ('Num.Credito:' in mcpp.descripcion)+12 for char_length(mcpp.descripcion)));
+//***************************************************************************************************************************
+//Para verificar informacion que se encuentra en detalle_liquidacion_cuota, para revision de saldos actuales de los creditos.
+//***************************************************************************************************************************
+
+------ Con operaciones para los saldos
+
+select  NUMEROCREDITO,CAST(NUMEROCUOTA AS INTEGER) CUOTAS,
+CAPITALPERIODO,ABONOCAPITAL,CAPITALPERIODO-ABONOCAPITAL as saldo_capital,
+INTERESCORRIENTEPERIODO,ABONOCORRIENTE,INTERESCORRIENTEPERIODO-ABONOCORRIENTE as saldo_interes,
+CUOTASEGURO,ABONOSEGURO,CUOTASEGURO-ABONOSEGURO as saldo_seguro,
+ABONOMORATORIOS
+ from m_cli_detalle_liquidacion_cuota MCDLC
+INNER JOIN M_CLI_CREDITO_APROBADO MCCA ON (
+MCDLC.M_CLI_CREDITO_APROBADOID=MCCA.ID 
+AND FORMADEEXTINCION='Vigente'
+AND NUMEROCREDITO='LIB-0002233'
+)
+ORDER BY 2
+
+---------- con saldos 
+
+select  NUMEROCREDITO,CAST(NUMEROCUOTA AS INTEGER) CUOTAS,
+CAPITALPERIODO,ABONOCAPITAL,saldoActualCapital,
+INTERESCORRIENTEPERIODO,ABONOCORRIENTE,saldoactualcorriente,
+CUOTASEGURO,ABONOSEGURO,saldoactualseguro,
+ABONOMORATORIOS
+ from m_cli_detalle_liquidacion_cuota MCDLC
+INNER JOIN M_CLI_CREDITO_APROBADO MCCA ON (
+MCDLC.M_CLI_CREDITO_APROBADOID=MCCA.ID 
+--AND FORMADEEXTINCION='Vigente'
+--AND NUMEROCREDITO='LIB-0002233'
+)
+ORDER BY 2
 
 -------------------------------------------------------------------------
 ----m_cli_detalle_comprobante_credito	con detalle liquidacion cuota 					
@@ -1635,39 +1637,7 @@ inner join
 			and mckc.m_cli_credito_aprobadoid=mcca.id
 			and mckc.m_cli_detalle_liquidacion_cuotaid=mcdlc.id)
 
-//***************************************************************************************************************************
-// verificar la informacion que se encuentra en detalle_liquidacion_cuota, para revision de saldos actuales de los creditos.
-//***************************************************************************************************************************
 
-select  NUMEROCREDITO,CAST(NUMEROCUOTA AS INTEGER) CUOTAS,
-CAPITALPERIODO,ABONOCAPITAL,CAPITALPERIODO-ABONOCAPITAL as saldo_capital,
-INTERESCORRIENTEPERIODO,ABONOCORRIENTE,INTERESCORRIENTEPERIODO-ABONOCORRIENTE as saldo_interes,
-CUOTASEGURO,ABONOSEGURO,CUOTASEGURO-ABONOSEGURO as saldo_seguro,
-ABONOMORATORIOS
- from m_cli_detalle_liquidacion_cuota MCDLC
-INNER JOIN M_CLI_CREDITO_APROBADO MCCA ON (
-MCDLC.M_CLI_CREDITO_APROBADOID=MCCA.ID 
-AND FORMADEEXTINCION='Vigente'
-AND NUMEROCREDITO='LIB-0002233'
-)
-ORDER BY 2
-
---------
-----------
--------------
-
-select  NUMEROCREDITO,CAST(NUMEROCUOTA AS INTEGER) CUOTAS,
-CAPITALPERIODO,ABONOCAPITAL,saldoActualCapital,
-INTERESCORRIENTEPERIODO,ABONOCORRIENTE,saldoactualcorriente,
-CUOTASEGURO,ABONOSEGURO,saldoactualseguro,
-ABONOMORATORIOS
- from m_cli_detalle_liquidacion_cuota MCDLC
-INNER JOIN M_CLI_CREDITO_APROBADO MCCA ON (
-MCDLC.M_CLI_CREDITO_APROBADOID=MCCA.ID 
---AND FORMADEEXTINCION='Vigente'
---AND NUMEROCREDITO='LIB-0002233'
-)
-ORDER BY 2
 
 --------------
 ------------------
