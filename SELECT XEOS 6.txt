@@ -177,11 +177,15 @@ insert
 ------detalle son todos los movimientos que han tenido todos los creditos.
 
 select  'insert into xeo_historico (numero_colocacion,ced_cliente,sucursal,tipo_doc,fecha_movimiento, cuota,transaccion,dd,fecha_desde,fecha_hasta,valor_transaccion)
-values ("'||pagare_m||'",'||cliente_m||',"'||sucur_m||'","'||tip_cre_m||'","'||fecha_m||'","'||cuota_m||'","'||tip_tra_m ||'","'||dias ||'","'
+values ("'||pagare_m||'",'||cliente_m||',"'||sucur_m||'","'||tip_cre_m||'","'||fecha_m||'","'||cuota_m||'","'||tip_tra_m ||'","'||coalesce(dias,0) ||'","'
 ||fi_pag_mor||'","'||ff_pag_mor||'",'||valor_m||');'
 from CF_MOVIMIENTOS 
 --where PAGARE_M='LIB-0002001'
 where pagare_m is not null 
+
+/*Se modificó debido a que en detalle liquidacion cuota se necesitan los dias de morosidad y algunos se encontraban en null y otros con numero. Los nulos se transformaron a ceros*/
+--update xeo_historico set dd=0 where dd is null
+
 
 ------encabezado solo debe tener si el credito esta o no vigente
 
