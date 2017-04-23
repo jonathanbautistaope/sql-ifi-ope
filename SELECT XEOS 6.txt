@@ -176,9 +176,9 @@ insert
 
 ------detalle son todos los movimientos que han tenido todos los creditos.
 
-select  'insert into xeo_historico (numero_colocacion,ced_cliente,sucursal,tipo_doc,fecha_movimiento, cuota,transaccion,dd,fecha_desde,fecha_hasta,valor_transaccion)
+select  'insert into xeo_historico (numero_colocacion,ced_cliente,sucursal,tipo_doc,fecha_movimiento, cuota,transaccion,dd,fecha_desde,fecha_hasta,valor_transaccion,tip_reliq,base)
 values ("'||pagare_m||'",'||cliente_m||',"'||sucur_m||'","'||tip_cre_m||'","'||fecha_m||'","'||cuota_m||'","'||tip_tra_m ||'","'||coalesce(dias,0) ||'","'
-||fi_pag_mor||'","'||ff_pag_mor||'",'||valor_m||');'
+||fi_pag_mor||'","'||ff_pag_mor||'",'||valor_m||',"'||coalesce(tip_reliq,' ')||'",'||base||');'
 from CF_MOVIMIENTOS 
 --where PAGARE_M='LIB-0002001'
 where pagare_m is not null 
@@ -202,34 +202,12 @@ from
     fec_desem,
     valor_desem 
  from cf_cue_desem where  est_vh_desem NOT IN ('A','P','R') AND NUM_DESEM NOT IN ('LIB-0002118','LIB-0002312') 
+ /*los creditos incluidos en el not in no fueron realizados, tienen registro pero no tienen nada.*/
 )a
-
-*********Tipos de reliquidacion 
-
-select 'update xeo_historico set tip_reliq="'||tip_reliq||'" where ced_cliente="'||cliente_m||'" and numero_colocacion="'||pagare_m||'" and sucursal="'||suc_cre_m||'" and tipo_doc="'||tip_cre_m||'" and fecha_movimiento="'||fecha_m||'" and cuota="'||cuota_m||'" and transaccion="01-Deuda" and fecha_desde="'||fi_pag_mor||'" and fecha_hasta="'||ff_pag_mor||'" and valor_transaccion='||valor_m||';'
-from CF_MOVIMIENTOS
-where tip_reliq in ('C','V','D','P')
-/*where PAGARE_M='LIB-0002257'
-and cuota_m=2*/
 
 --------------------------------------------
 Modificaciones de los tipos de transacciones
 ---------------------------------------------
-
-UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Deuda' where transaccion='01';
-UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Mora' where transaccion='02';
-UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Int.' where transaccion in ('03','04','05','06');
-UPDATE XEO_HISTORICO SET TRANSACCION = TRANSACCION || '-Seguro' where transaccion in ('08','10','11');
-
-update xeo_historico set transaccion='03' where transaccion='03-Int.';
-update xeo_historico set transaccion='11' where transaccion='11-Seguro';
-update xeo_historico set transaccion='08' where transaccion='08-Seguro';
-update xeo_historico set transaccion='01' where transaccion='01-Deuda';
-update xeo_historico set transaccion='06' where transaccion='06-Int.';
-update xeo_historico set transaccion='10' where transaccion='10-Seguro';
-update xeo_historico set transaccion='02' where transaccion='02-Mora';
-update xeo_historico set transaccion='04' where transaccion='04-Int.';
-update xeo_historico set transaccion='05' where transaccion='05-Int.';
 
 update xeo_historico set transaccion='03-Int. Causado' where transaccion='03';
 update xeo_historico set transaccion='11-Seguro Extraprima' where transaccion='11';
