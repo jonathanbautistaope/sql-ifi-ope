@@ -12,7 +12,7 @@ from
 	xeo_plandepagos xpp
 inner join 
 	(
-		select ced_cliente,numero_colocacion,cuota,--valor_desembolso,
+		select ced_cliente,xh1.numero_colocacion,cuota,--valor_desembolso,
 		SUM(case
 		when POSITION( 'Int.' IN transaccion)>0
 			then coalesce(VALOR_TRANSACCION,0) end)  interes_corriente,
@@ -29,7 +29,9 @@ inner join
 		when POSITION( 'Mora' IN transaccion)>0  
 			then cast(dd as integer) end ) dd_mora,
 		sum(coalesce(saldo_capital,0))
-		from xeo_historico
+		from xeo_historico xh1
+		inner join (select numero_colocacion from xeo_historico where cuota is null and transaccion='VIGENTE') xh2
+		ON (xh1.numero_colocacion=xh2.numero_colocacion)
 		where cuota is not null
 		group by 1,2,3--,4
 	) xh
