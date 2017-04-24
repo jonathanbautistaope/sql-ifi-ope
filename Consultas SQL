@@ -36,3 +36,13 @@ inner join
 		group by 1,2,3--,4
 	) xh
 		on (xh.numero_colocacion = xpp.numero_credito and CAST(COALESCE(xh.cuota,'0')AS INTEGER) = CAST(COALESCE(xpp.cuota,'0') AS INTEGER) )
+
+
+----------------------------------------
+Verificar los valores de los seguros
+----------------------------------------
+
+select  distinct num_cc,cam_cc,cargo_cc
+FROM cf_aux_cargcuo
+--where num_cc='LIB-0002290'
+order by 1
