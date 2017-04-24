@@ -1173,98 +1173,14 @@ inner join
 --------------------------------------------------
 // para adicionar los creditos que no tienen ningún movimiento
 --------------------------------------------------
-select * from xeo_historico
-where numero_colocacion in (
-'2006-02-335',
-'2008-02-396',
-'2008-02-397',
-'CAR-184',
-'CAR-190',
-'CAR-192',
-'CAR-193',
-'CAR-194',
-'LIB-0002780',
-'LIB-0002782',
-'LIB-0002796',
-'LIB-0002797',
-'LIB-0002798',
-'LIB-0002799',
-'LIB-0002805',
-'LIB-0002806',
-'LIB-0002809',
-'LIB-0002810',
-'LIB-0002811',
-'LIB-0002815',
-'LIB-0002816',
-'LIB-0002817',
-'LIB-0002819',
-'LIB-0002820',
-'LIB-0002821',
-'LIB-0002822',
-'LIB-0002823',
-'LIB-0002835',
-'LIB-0002837',
-'LIB-0002838',
-'LIB-0002839',
-'LIB-0002840',
-'LIB-0002841',
-'LIB-0002842',
-'LIB-0002843',
-'LIB-0002844',
-'LIB-0002845',
-'LIB-0002846',
-'LIB-0002847',
-'LIB-0002848',
-'LIB-0002849',
-'LIB-0002850',
-'LIB-0002852',
-'LIB-0002854',
-'LIB-0002855',
-'LIB-0002856',
-'LIB-0002857',
-'LIB-0002858',
-'LIB-0002859',
-'LIB-0002860',
-'LIB-0002861',
-'LIB-0002862',
-'LIB-0002863',
-'LIB-0002864',
-'LIB-0002865',
-'LIB-0002866',
-'LIB-0002867',
-'LIB-0002868',
-'LIB-0002869',
-'LIB-0002870',
-'LIB-0002871',
-'LIB-0002872',
-'LIB-0002873',
-'LIB-0002874',
-'LIB-0002875',
-'LIB-0002876',
-'LIB-0002877',
-'LIB-0002878',
-'LIB-0002879',
-'LIB-0002880',
-'LIB-0002881',
-'LIB-0002882',
-'LIB-0002883',
-'LIB-0002884',
-'LIB-0002885',
-'LIB-0002886',
-'LIB-0002887',
-'LIB-0002888',
-'LIB-0002890',
-'LIB-0002892',
-'LIB-0002893',
-'LIB-0002894',
-'LIB-0002895',
-'LIB-0002896',
-'LIB-0002897',
-'LIB-0002898',
-'LIB-0002899',
-'LIB-0002900',
-'LIB-0002901'
-)
+select numerocredito --si esta consulta se modifica debe modificarse en el insert select que sigue,donde dice:(select sin mov.)
+from m_cli_credito_aprobado
+where numerocredito
+not in (select distinct mcca.numerocredito
+from m_cli_kardex_credito mckc
+inner join m_cli_credito_aprobado mcca on (mckc.m_cli_credito_aprobadoid=mcca.id) )
+--where mcca.numerocredito='LIB-0001604'
+--order by m_cli_credito_aprobadoid
 
 -----------------------------------
 Insert para m_cli_kardex_credito creditos que no tienen movimientos 
@@ -1326,28 +1242,15 @@ select
 from (select numero_colocacion,valor_desembolso,fecha_desembolso
 		 from xeo_historico
 		 where cuota is null and numero_colocacion
-		 in ('2006-02-335','2008-02-396','2008-02-397','CAR-184','CAR-190',
-				'CAR-192','CAR-193','CAR-194','LIB-0002780',
-				'LIB-0002782','LIB-0002796','LIB-0002797','LIB-0002798',
-				'LIB-0002799','LIB-0002805','LIB-0002806','LIB-0002809',
-				'LIB-0002810','LIB-0002811','LIB-0002815','LIB-0002816',
-				'LIB-0002817','LIB-0002819','LIB-0002820','LIB-0002821',
-				'LIB-0002822','LIB-0002823','LIB-0002835','LIB-0002837',
-				'LIB-0002838','LIB-0002839','LIB-0002840','LIB-0002841',
-				'LIB-0002842','LIB-0002843','LIB-0002844','LIB-0002845',
-				'LIB-0002846','LIB-0002847','LIB-0002848','LIB-0002849',
-				'LIB-0002850','LIB-0002852','LIB-0002854','LIB-0002855',
-				'LIB-0002856','LIB-0002857','LIB-0002858','LIB-0002859',
-				'LIB-0002860','LIB-0002861','LIB-0002862','LIB-0002863',
-				'LIB-0002864','LIB-0002865','LIB-0002866','LIB-0002867',
-				'LIB-0002868','LIB-0002869','LIB-0002870','LIB-0002871',
-				'LIB-0002872','LIB-0002873','LIB-0002874','LIB-0002875',
-				'LIB-0002876','LIB-0002877','LIB-0002878','LIB-0002879',
-				'LIB-0002880','LIB-0002881','LIB-0002882','LIB-0002883',
-				'LIB-0002884','LIB-0002885','LIB-0002886','LIB-0002887',
-				'LIB-0002888','LIB-0002890','LIB-0002892','LIB-0002893',
-				'LIB-0002894','LIB-0002895','LIB-0002896','LIB-0002897',
-				'LIB-0002898','LIB-0002899','LIB-0002900','LIB-0002901'	)	
+		 in (select numerocredito --(select sin mov.)
+			from m_cli_credito_aprobado
+			where numerocredito
+			not in (select distinct mcca.numerocredito
+			from m_cli_kardex_credito mckc
+			inner join m_cli_credito_aprobado mcca on (mckc.m_cli_credito_aprobadoid=mcca.id) )
+			--where mcca.numerocredito='LIB-0001604'
+			--order by m_cli_credito_aprobadoid	
+			)	
 	) xh
 
 inner join 
@@ -1367,29 +1270,16 @@ inner join
 		end) mesespago
 		from m_cli_credito_aprobado mcca
 		where (  numerocredito in 
-			('2006-02-335','2008-02-396','2008-02-397','CAR-184','CAR-190',
-				'CAR-192','CAR-193','CAR-194','LIB-0002780',
-				'LIB-0002782','LIB-0002796','LIB-0002797','LIB-0002798',
-				'LIB-0002799','LIB-0002805','LIB-0002806','LIB-0002809',
-				'LIB-0002810','LIB-0002811','LIB-0002815','LIB-0002816',
-				'LIB-0002817','LIB-0002819','LIB-0002820','LIB-0002821',
-				'LIB-0002822','LIB-0002823','LIB-0002835','LIB-0002837',
-				'LIB-0002838','LIB-0002839','LIB-0002840','LIB-0002841',
-				'LIB-0002842','LIB-0002843','LIB-0002844','LIB-0002845',
-				'LIB-0002846','LIB-0002847','LIB-0002848','LIB-0002849',
-				'LIB-0002850','LIB-0002852','LIB-0002854','LIB-0002855',
-				'LIB-0002856','LIB-0002857','LIB-0002858','LIB-0002859',
-				'LIB-0002860','LIB-0002861','LIB-0002862','LIB-0002863',
-				'LIB-0002864','LIB-0002865','LIB-0002866','LIB-0002867',
-				'LIB-0002868','LIB-0002869','LIB-0002870','LIB-0002871',
-				'LIB-0002872','LIB-0002873','LIB-0002874','LIB-0002875',
-				'LIB-0002876','LIB-0002877','LIB-0002878','LIB-0002879',
-				'LIB-0002880','LIB-0002881','LIB-0002882','LIB-0002883',
-				'LIB-0002884','LIB-0002885','LIB-0002886','LIB-0002887',
-				'LIB-0002888','LIB-0002890','LIB-0002892','LIB-0002893',
-				'LIB-0002894','LIB-0002895','LIB-0002896','LIB-0002897',
-				'LIB-0002898','LIB-0002899','LIB-0002900','LIB-0002901'
-				))
+			(select numerocredito --(select sin mov.)
+				from m_cli_credito_aprobado
+				where numerocredito
+				not in (select distinct mcca.numerocredito
+				from m_cli_kardex_credito mckc
+				inner join m_cli_credito_aprobado mcca on (mckc.m_cli_credito_aprobadoid=mcca.id) )
+				--where mcca.numerocredito='LIB-0001604'
+				--order by m_cli_credito_aprobadoid
+			)
+		      )
 		
 	) mcca
 	on (trim(mcca.numerocredito)=trim(xh.numero_colocacion))	
@@ -1515,6 +1405,17 @@ where ( m_cli_kardex_credito.m_cli_detalle_liquidacion_cuotaid=dlc2.id)
 --------
 
 update m_cli_kardex_credito set acumuladomoragenerada=acumuladoabonomora;
+
+
+----------------------------------------------------
+Procesos para cuadre de saldos
+---------------------------------------------------
+
+1.subir los creditos que tienen saldo en cuotas de capital en la ultima cuota y que no tienen saldo a favor en intereses ni en seguro.
+
+2. Subir los creditos que tienen saldo en cuotas de capital  en la ultima cuota y qut tienen saldo a favor menor al valor de la cuota a pagar.
+
+3. Distribuir los saldos a favor de los intereses entre las cuotas pendientes por pagar, hasta que quede en deuda con la entidad.
 
 ---------------------------------------------------
 --- m_cli_kardex_cuota						
