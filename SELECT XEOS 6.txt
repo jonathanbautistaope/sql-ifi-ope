@@ -79,6 +79,12 @@ left JOIN (SELECT suc_cc,tip_cc,lin_cc,num_cc,cuota_cc,cam_cc,sum(cargo_cc) as c
 --LIB-0002118
 --LIB-0002312
 
+-----------------------------------------------------------------------------------------------------------------
+Credito con diferncia en el valor de plan de pago impreso y el plan de pagos de la tabla cf_aux_cargcuo por seguro
+-----------------------------------------------------------------------------------------------------------------
+
+UPDATE xeo_plandepagos SET VALOR_SEGURO=15229 where numero_credito='LIB-0002290';
+
 //******************************
 //**********************************
 		
