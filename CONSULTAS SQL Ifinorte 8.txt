@@ -101,7 +101,7 @@ END),xpp.modo_pago,xh.numero_colocacion,xpp.fecha_desembolso,cast(MAX(to_char(ex
 (CASE 
 WHEN xh.numero_colocacion like '%LIB%' THEN 'Cuota creciente'
 ELSE 'Cuota constante' 
-END),xpp.tasa_ea,'Fijo','Vencido',					CAST(xpp.puntos_spread as NUMERIC(13,4) ),
+END),xpp.tasa_ea,'Fijo','Vencido',					CAST(xpp.puntos_spread as NUMERIC(20,4) ),
 m_cli_cliente.id,2,to_date('01-01-2017','yyyy-mm-dd'),
 MAX (CASE 
 WHEN xh.numero_colocacion like '%LIB%' THEN valor_cuota
@@ -194,7 +194,7 @@ abonoseguro)
 SELECT --Solo las cuotas que tienen movimiento en el historico
 	mclc.id , --m_cli_liquidacion_cuotaid
 	mcca.id , --m_cli_credito_aprobadoid
-	xpp.cuota , --numerocuota
+	cast(xpp.cuota as integer) , --numerocuota
 	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'), 'yyyy-mm-dd') , --inicioliquidacion
 	xpp.fecha_vencimiento , --finliquidacion
 	to_date(To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd'), 'yyyy-mm-dd') , --fechapago
@@ -204,7 +204,7 @@ SELECT --Solo las cuotas que tienen movimiento en el historico
 	coalesce(xpp.valor_capital,0) , --capitalperiodo
 	coalesce(xpp.valor_capital,0)-coalesce(xh.deuda,0) , --saldoactualcapital
 	0 , --saldoanteriorcorrientes
-	xpp.pago_interes , --diasinterescorriente
+	cast(xpp.pago_interes as integer) , --diasinterescorriente
 	coalesce(xpp.tasa_periodo,0) , --porcentajecorriente
 	coalesce(xpp.valor_interes,0) , --interescorrienteperiodo
 	0 , --saldoactualcorriente 
@@ -273,7 +273,7 @@ union
 SELECT --Las cuotas que no tienen movimiento en el historico
 	mclc.id , 	--mclc.id
 	mcca.id ,	--mca.id
-	xpp.cuota ,	--numerocuota
+	cast(xpp.cuota as integer) ,	--numerocuota
 	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd') , 'yyyy-mm-dd') ,	--inicioliquidacion
 	xpp.fecha_vencimiento ,		--finliquidacion
 	to_date(To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd') , 'yyyy-mm-dd') ,	--fechapago
@@ -283,7 +283,7 @@ SELECT --Las cuotas que no tienen movimiento en el historico
 	coalesce(xpp.valor_capital,0) , 	--capitalperiodo
 	coalesce(xpp.valor_capital,0) , 	--saldoactualcapital
 	0  ,	--saldoanteriorcorrientes
-	xpp.pago_interes , --diasinterescorriente
+	cast(xpp.pago_interes as integer) , --diasinterescorriente
 	coalesce(xpp.tasa_periodo,0)  ,	--porcentajecorriente
 	coalesce(xpp.valor_interes,0) ,	--interescorrienteperiodo
 	0 , 			--saldoactualcorriente
@@ -339,7 +339,7 @@ UNION
 SELECT  --para aquellos creditos que solo tienen una cuota a pagar
 	mclc.id ,
 	mcca.id ,
-	xpp.cuota ,
+	cast(xpp.cuota as integer) ,
 	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'), 'yyyy-mm-dd') ,
 	xpp.fecha_vencimiento,
 	to_date(To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd') , 'yyyy-mm-dd') ,
@@ -349,7 +349,7 @@ SELECT  --para aquellos creditos que solo tienen una cuota a pagar
 	coalesce(xpp.valor_capital,0) , --capitalperiodo
 	coalesce(xpp.valor_capital,0) , --saldoactualcapital
 	0 , --saldoanteriorcorrientes
-	xpp.pago_interes	      , --diasinterescorriente
+	cast(xpp.pago_interes as integer)	      , --diasinterescorriente
 	coalesce(xpp.tasa_periodo,0)  , --porcentajecorriente
 	coalesce(xpp.valor_interes,0) , --interescorrienteperiodo
 	0 , --saldoactualcorriente
@@ -407,7 +407,7 @@ SELECT --Solo los creditos que tienen cuota cero y que ya tienen un movimiento e
 	--adicionalmente el saldo del interes es cero por que se le descuenta total del credito.
 	mclc.id , --m_cli_liquidacion_cuotaid
 	mcca.id , --m_cli_credito_aprobadoid
-	xpp.cuota ,--numerocuota
+	cast(xpp.cuota as integer) ,--numerocuota
 	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'), 'yyyy-mm-dd') , --inicioliquidacion
 	xpp.fecha_vencimiento , --finliquidacion
 	to_date(To_char(date_trunc('month',xpp.fecha_vencimiento )  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd'), 'yyyy-mm-dd') , --fechapago
@@ -417,7 +417,7 @@ SELECT --Solo los creditos que tienen cuota cero y que ya tienen un movimiento e
 	coalesce(xpp.valor_capital,0) , --capitalperiodo
 	coalesce(xpp.valor_capital,0) , --coalesce(xpp.valor_capital,0)-coalesce(xh.deuda,0) ||','||--saldoactualcapital
 	0 , --saldoanteriorcorrientes
-	xpp.pago_interes , --diasinterescorriente
+	cast(xpp.pago_interes as integer) , --diasinterescorriente
 	coalesce(xpp.tasa_periodo,0) , --porcentajecorriente
 	coalesce(xpp.valor_interes,0) , --interescorrienteperiodo
 	0 , --saldoactualcorriente 
