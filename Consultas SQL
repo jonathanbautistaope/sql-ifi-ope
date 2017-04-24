@@ -1,0 +1,36 @@
+--------------------------------------
+Para hacer cruce de informacion es decir consultar solo lo
+--------------------------------------
+select 
+	xpp.numero_credito,
+	xpp.cuota,
+	xpp.valor_capital,xh.deuda,xpp.valor_capital-xh.deuda as saldo_capita,
+	xpp.valor_interes,xh.interes_corriente,xpp.valor_interes-xh.interes_corriente as saldo_interes,
+	xpp.valor_seguro,xh.seguro,xpp.valor_seguro-xh.seguro as saldo_seguro,
+	xh.mora
+from 	
+	xeo_plandepagos xpp
+inner join 
+	(
+		select ced_cliente,numero_colocacion,cuota,--valor_desembolso,
+		SUM(case
+		when POSITION( 'Int.' IN transaccion)>0
+			then coalesce(VALOR_TRANSACCION,0) end)  interes_corriente,
+		sum(case
+		when POSITION( 'Seguro' IN transaccion)>0 
+			then coalesce(valor_transaccion,0) end ) seguro,
+		sum(case
+		when POSITION( 'Deuda' IN transaccion)>0  
+			then coalesce(valor_transaccion,0) end ) deuda,
+		sum(case
+		when POSITION( 'Mora' IN transaccion)>0  
+			then coalesce(valor_transaccion,0) end ) mora,
+		sum(case
+		when POSITION( 'Mora' IN transaccion)>0  
+			then cast(dd as integer) end ) dd_mora,
+		sum(coalesce(saldo_capital,0))
+		from xeo_historico
+		where cuota is not null
+		group by 1,2,3--,4
+	) xh
+		on (xh.numero_colocacion = xpp.numero_credito and CAST(COALESCE(xh.cuota,'0')AS INTEGER) = CAST(COALESCE(xpp.cuota,'0') AS INTEGER) )
