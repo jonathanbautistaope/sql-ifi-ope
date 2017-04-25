@@ -1528,70 +1528,21 @@ Procesos para cuadre de saldos
 ---------------------------------------------------
 --- m_cli_kardex_cuota						
 ---------------------------------------------------
-SELECT 
-	'insert into m_cli_kardex_cuota (m_cli_kardex_creditoid,m_cli_detalle_liquidacion_cuotaid,abonomoratorios,abonocorriente,abonocapital,abonoseguro,creacion)values ('||
-	mckc.id||','||
-	mcdlc.id||','||
-	0||','||--coalesce(xh.mora,0)
-	coalesce(xh.interes_corriente,0)||','||
-	coalesce(xh.deuda,0)||','||
-	coalesce(xh.seguro,0)||',"'||'01-01-2017'||'");'
+insert into m_cli_kardex_cuota (m_cli_kardex_creditoid,m_cli_detalle_liquidacion_cuotaid,abonomoratorios,abonocorriente,abonocapital,abonoseguro,creacion)SELECT 
+	mckc.id,
+	mckc.m_cli_detalle_liquidacion_cuotaid,
+	coalesce(abonomoratorios,0),--coalesce(xh.mora,0)
+	coalesce(abonocorriente,0),
+	coalesce(abonocapital,0),
+	coalesce(abonoseguro,0),
+	'01-01-2017'
 
-from    (
-	select numero_colocacion,cuota,valor_desembolso,fecha_movimiento,
-		SUM(case
-		when POSITION( 'Int.' IN transaccion)>0
-			then coalesce(VALOR_TRANSACCION,0) end)interes_corriente,
-		sum(case
-		when POSITION( 'Seguro' IN transaccion)>0 
-			then coalesce(valor_transaccion,0) end ) seguro,
-		sum(case
-		when POSITION( 'Deuda' IN transaccion)>0  
-			then coalesce(valor_transaccion,0) end ) deuda,
-		sum(case
-		when POSITION( 'Mora' IN transaccion)>0  
-			then coalesce(valor_transaccion,0) end ) mora,
-		sum(saldo_capital) capital
-		from xeo_historico
-		where cuota is not null
-		group by 1,2,3,4
-		
-	) xh
-		
-inner join 
-	(select 
-	descripcion,fecha,substring(descripcion from position ('Num.Credito:' in descripcion)+12 for char_length(descripcion)) as credito,id
-	from m_cli_comprobante_credito) mccc
-	on (trim(xh.numero_colocacion) = trim(mccc.credito) and (mccc.fecha=xh.fecha_movimiento))
+from   	m_cli_kardex_credito mckc
+where m_cli_detalle_liquidacion_cuotaid is not null
 
-inner join 
-	(select id,numerocredito
-		from m_cli_credito_aprobado
-	) mcca
-	on (trim(mcca.numerocredito)=trim(xh.numero_colocacion))	
-
-inner join 
-	(select 
-		substring(descripcion from position ('Num.Credito:' in descripcion)+12 for char_length(descripcion)) as credito,id
-		from m_cli_liquidacion_cuota) mclc
-			on (trim(xh.numero_colocacion) = trim(mclc.credito))
-		
-inner join 
-	m_cli_detalle_liquidacion_cuota mcdlc
-		on (mcdlc.m_cli_credito_aprobadoid=mcca.id) and (cast(xh.cuota as integer)=mcdlc.numerocuota)
-
-inner join 
-	m_cli_detalle_comprobante_credito mcdcc
-		on (mcdcc.m_cli_comprobante_creditoid = mccc.id
-			 and mcdcc.m_cli_credito_aprobadoid=mcca.id
-			 and mcdcc.m_cli_detalle_liquidacion_cuotaid=mcdlc.id)
-
-inner join 
-	m_cli_kardex_credito mckc
-		on (mckc.m_cli_detalle_comprobante_creditoid=mcdcc.id
-			and mckc.m_cli_credito_aprobadoid=mcca.id
-			and mckc.m_cli_detalle_liquidacion_cuotaid=mcdlc.id)
-
+-------------------------------------------------------
+Tablas conceptos
+-------------------------------------------------------
 
 
 --------------
