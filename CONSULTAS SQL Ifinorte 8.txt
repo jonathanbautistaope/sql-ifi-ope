@@ -1276,7 +1276,7 @@ inner join
 		on (mcdcc.m_cli_comprobante_creditoid = mccc.id
 			 and mcdcc.m_cli_credito_aprobadoid=mcca.id
 			 and mcdcc.m_cli_detalle_liquidacion_cuotaid=mcdlc.id)
-
+order by xh.fecha_movimiento
 			 			 			 
 --------------------------------------------------
 // para adicionar los creditos que no tienen ningún movimiento
