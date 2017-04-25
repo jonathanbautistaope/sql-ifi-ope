@@ -834,6 +834,7 @@ Ejecutar los archivos de TOTAL - MORA (correo electrónico).
 //////***************************************
 //////******************************
 
+/*
 UPDATE M_CLI_DETALLE_LIQUIDACION_CUOTA MCDLC */
 SET 
 	porcentajemora=((32.985/100)/360)*diasmora
@@ -847,6 +848,7 @@ SET
 	interesmoratorioperiodo=ROUND(((32.985/100)/360)*diasmora*saldoactualcapital)
 FROM M_CLI_LIQUIDACION_CUOTA MCLC
 WHERE MCLC.ID=MCDLC.M_CLI_LIQUIDACION_CUOTAID 
+*/
 
 
 //***************************************************************************************************************************
@@ -882,6 +884,112 @@ MCDLC.M_CLI_CREDITO_APROBADOID=MCCA.ID
 --AND NUMEROCREDITO='LIB-0002233'
 )
 ORDER BY 2
+
+------------------------------------------------------------------------
+Asignacion de saldos a los creditos que no se encuentran a paz y salvo
+------------------------------------------------------------------------
+select CASE WHEN SALDO_CAPITAL>0 THEN 'UPDATE m_cli_detalle_liquidacion_cuota mclc set saldoactualcapital='||saldo_capital||' from m_cli_credito_aprobado mcca where mcca.id=mclc.m_cli_credito_aprobadoid and numerocuota='||m_cuota||' and numerocredito="'||numero_credito||'";' END,
+	CASE WHEN SALDO_INTERES>0 THEN 'UPDATE m_cli_detalle_liquidacion_cuota mclc set saldoactualcorriente='||saldo_interes||' from m_cli_credito_aprobado mcca where mcca.id=mclc.m_cli_credito_aprobadoid and numerocuota='||m_cuota||' and numerocredito="'||numero_credito||'";' END,
+	CASE WHEN SALDO_SEGURO>0 THEN 'UPDATE m_cli_detalle_liquidacion_cuota mclc set saldoactualseguro='||saldo_seguro||' from m_cli_credito_aprobado mcca where mcca.id=mclc.m_cli_credito_aprobadoid and numerocuota='||m_cuota||' and numerocredito="'||numero_credito||'";' END
+from 
+(
+	select 
+	xpp.numero_credito,
+	
+	--xpp.cuota,
+	sum(coalesce(xpp.valor_capital,0)) as deuda_pp,sum(coalesce(xh.deuda,0)) as deuda_h,
+	sum(coalesce(xpp.valor_capital,0)-coalesce(xh.deuda,0)) as saldo_capital,
+	
+	sum(coalesce(xpp.valor_interes,0)) as int_pp,sum(coalesce(xh.interes_corriente,0)) as int_h,
+	sum(coalesce(xpp.valor_interes,0)-coalesce(xh.interes_corriente,0)) as saldo_interes,
+	
+	sum(coalesce(xpp.valor_seguro,0)) as seg_pp,sum(coalesce(xh.seguro,0)) as seg_h, 
+	sum(coalesce(xpp.valor_seguro,0)-coalesce(xh.seguro,0)) as saldo_seguro,
+
+	sum(mora) as mora_h, 
+
+	(select max(cuota) from xeo_historico xh where numero_colocacion=xpp.numero_credito) as m_cuota,
+
+	(select max(fecha_movimiento) from xeo_historico xh where numero_colocacion=xpp.numero_credito) as fec_mov
+	from 	
+	xeo_plandepagos xpp
+	inner join 
+	(
+		select ced_cliente,xh1.numero_colocacion,cuota,--valor_desembolso,
+		SUM(case
+		when POSITION( 'Int.' IN transaccion)>0
+			then coalesce(VALOR_TRANSACCION,0) end)  interes_corriente,
+		sum(case
+		when POSITION( 'Seguro' IN transaccion)>0 
+			then coalesce(valor_transaccion,0) end ) seguro,
+		sum(case
+		when POSITION( 'Deuda' IN transaccion)>0  
+			then coalesce(valor_transaccion,0) end ) deuda,
+		sum(case
+		when POSITION( 'Mora' IN transaccion)>0  
+			then coalesce(valor_transaccion,0) end ) mora,
+		sum(case
+		when POSITION( 'Mora' IN transaccion)>0  
+			then cast(dd as integer) end ) dd_mora,
+		sum(coalesce(saldo_capital,0))
+		from xeo_historico xh1
+		inner join (select numero_colocacion from xeo_historico where cuota is null and transaccion='VIGENTE') xh2
+		ON (xh1.numero_colocacion=xh2.numero_colocacion)
+		where cuota is not null
+		group by 1,2,3--,4
+		) xh
+		on (xh.numero_colocacion = xpp.numero_credito and 
+			CAST(COALESCE(xh.cuota,'0')AS INTEGER) = CAST(COALESCE(xpp.cuota,'0') AS INTEGER) )
+		where xh.numero_colocacion in 
+		('2010-01-437','2010-01-438','2013-02-503','2013-02-504','2014-02-507','2014-02-508','2014-02-512.','2014-02-513',
+		'2014-02-514','2014-02-515','2014-02-516','2014-02-517','2015-01-524','2015-01-526','2015-01-527','2015-01-529','2015-02-520','2016-01-531','CAR-107','CAR-145','CAR-165***',
+		'CAR-166','CAR-167','CAR-168','CAR-169','CAR-170','CAR-171*','CAR-178','CAR-181','FAC-103','FAC-106*','FAC-107','FAC-108','FAC-109','LIB- 0001869','LIB-0001237','LIB-0001250',
+		'LIB-0001255','LIB-0001258','LIB-0001271','LIB-0001299','LIB-0001301','LIB-0001308','LIB-0001318','LIB-0001376','LIB-0001389','LIB-0001392','LIB-0001395-','LIB-0001405','LIB-0001428',
+		'LIB-0001448','LIB-0001451','LIB-0001454','LIB-0001459','LIB-0001462','LIB-0001469','LIB-0001474','LIB-0001475','LIB-0001488','LIB-0001492','LIB-0001494','LIB-0001495','LIB-0001498','LIB-0001500',
+		'LIB-0001511','LIB-0001516','LIB-0001551','LIB-0001568','LIB-0001570','LIB-0001576','LIB-0001578','LIB-0001587','LIB-0001595','LIB-0001601','LIB-0001606','LIB-0001613','LIB-0001621',
+		'LIB-0001622',
+		'LIB-0001625','LIB-0001626','LIB-0001627','LIB-0001628','LIB-0001656','LIB-0001663','LIB-0001664','LIB-0001673','LIB-0001677','LIB-0001678','LIB-0001693','LIB-0001694','LIB-0001696','LIB-0001697','LIB-0001701',
+		'LIB-0001705','LIB-0001706','LIB-0001707','LIB-0001710','LIB-0001719','LIB-0001720','LIB-0001721','LIB-0001723','LIB-0001726','LIB-0001731','LIB-0001735','lib-0001737','LIB-0001740','LIB-0001743','LIB-0001748',
+		'LIB-0001749','LIB-0001753','LIB-0001756','LIB-0001762.','LIB-0001763.','LIB-0001764.','LIB-0001766','LIB-0001769','LIB-0001770','LIB-0001772','LIB-0001779*','LIB-0001781','LIB-0001782',
+		'LIB-0001787','LIB-0001788','LIB-0001789','LIB-0001791','LIB-0001801','LIB-0001805','LIB-0001806','LIB-0001808','LIB-0001809','LIB-0001812','LIB-0001813*','LIB-0001814','LIB-0001823',
+		'LIB-0001825','LIB-0001826','LIB-0001829','LIB-0001831','LIB-0001834','LIB-0001840','LIB-0001841','LIB-0001845','LIB-0001847','LIB-0001850','LIB-0001859','LIB-0001862','LIB-0001864','LIB-0001866',
+		'LIB-0001867','LIB-0001870','LIB-0001877','LIB-0001879','LIB-0001882','LIB-0001886','LIB-0001890','LIB-0001891','LIB-0001895','LIB-0001896','LIB-0001897','LIB-0001899','LIB-0001900',
+		'LIB-0001902','LIB-0001903','LIB-0001904','LIB-0001905','LIB-0001909','LIB-0001910','LIB-0001911','LIB-0001916','LIB-0001917','LIB-0001918','LIB-0001922','LIB-0001924','LIB-0001925',
+		'LIB-0001928','LIB-0001929','LIB-0001930','LIB-0001933','LIB-0001934','LIB-0001935','LIB-0001936','LIB-0001937','LIB-0001938','LIB-0001939','LIB-0001940','LIB-0001942','LIB-0001954',
+		'LIB-0001955','LIB-0001958','LIB-0001961','LIB-0001962','LIB-0001965','LIB-0001968','LIB-0001969','LIB-0001973','LIB-0001974','LIB-0001975','LIB-0001976','LIB-0001977','LIB-0001978',
+		'LIB-0001979','LIB-0001980','LIB-0001981','LIB-0001983','LIB-0001985','LIB-0001986','LIB-0001987','LIB-0001988','LIB-0001989','LIB-0001990','LIB-0001992','LIB-0001996','LIB-0001997',
+		'LIB-0001999','LIB-0002001','LIB-0002002','LIB-0002003','LIB-0002004','LIB-0002005','LIB-0002006','LIB-0002008','LIB-0002009','LIB-0002011','LIB-0002013','LIB-0002014','LIB-0002015',
+		'LIB-0002016','LIB-0002017','LIB-0002018','LIB-0002019','LIB-0002021','LIB-0002025','LIB-0002026','LIB-0002027','LIB-0002029','LIB-0002030','LIB-0002031','LIB-0002032','LIB-0002038','LIB-0002039','LIB-0002040','LIB0002041',
+		'LIB-0002042','LIB-000-2045','LIB-0002052','LIB-0002053','LIB-0002056','LIB-0002061','LIB-0002063','LIB-0002064','LIB-0002065','LIB-0002067','LIB-0002071','LIB-0002075','LIB-0002076',
+		'LIB-0002077','LIB-0002078','LIB-0002080','LIB-0002081','LIB-0002082','LIB-0002086','LIB-0002090','LIB-0002095','LIB-0002096','LIB-0002098','LIB-0002099','LIB-0002100','LIB-0002105',
+		'LIB-0002107','LIB-0002111','LIB-0002115','LIB-0002116','LIB-0002119','LIB-0002122','LIB-0002123','LIB-0002129','LIB-0002130','LIB-0002131','LIB-0002132','LIB-0002133','LIB-0002134',
+		'LIB-0002135','LIB-0002139','LIB-0002140','LIB-0002141','LIB-0002142','LIB-0002145','LIB-0002146','LIB-0002148','LIB-0002149','LIB-0002150','LIB-0002152','LIB-0002155','LIB-0002158',
+		'LIB-0002159','LIB-0002160','LIB-0002161','LIB-0002162','LIB-0002163','LIB-0002164','LIB-0002167','LIB-0002171','LIB-0002172','LIB-0002173','LIB-0002175','LIB-0002176','LIB-0002180',
+		'LIB-0002181','LIB-0002182','LIB-0002183','LIB-0002184','LIB-0002186','LIB-0002187','LIB-0002194','LIB-0002198','LIB-0002203','LIB-0002204','LIB-0002209','LIB-0002210','LIB-0002213',
+		'LIB-0002214','LIB-0002222','LIB-0002226','LIB-0002227','LIB-0002229','LIB-0002230','LIB-0002234','LIB-0002241','LIB-0002244','LIB-0002245','LIB-0002246','LIB-0002251','LIB-0002255',
+		'LIB-0002257','LIB-0002262','LIB-0002264','LIB-0002268','LIB-0002271','LIB-0002273','LIB-0002274','LIB-0002275','LIB-0002276','LIB-0002277','LIB-0002278','LIB-0002279','LIB-0002280',
+		'LIB-0002281','LIB-0002284','LIB-0002290','LIB-0002296','LIB-0002297','LIB-0002299','LIB-0002302','LIB-0002304','LIB-0002305','LIB-0002307','LIB-0002310','LIB-0002314','LIB-0002315',
+		'LIB-0002317','LIB-0002318','LIB-0002320','LIB-0002321','LIB-0002323','LIB-0002326','LIB-0002327','LIB-0002329','LIB-0002330','LIB-0002333','LIB-0002334','LIB-0002345','LIB-0002347',
+		'LIB-0002357','LIB-0002361','LIB-0002364','LIB-0002366','LIB-0002367','LIB-0002368','LIB-0002374','LIB-0002380','LIB-0002383','LIB-0002385','LIB-0002386','LIB-0002388','LIB-0002392',
+		'LIB-0002397','LIB-0002400','LIB-0002405','LIB-0002408','LIB-0002416','LIB-0002420','LIB-0002421','LIB-0002425','LIB-0002435','LIB-0002440','LIB-0002444','LIB-0002450','LIB-0002452',
+		'LIB-0002457','LIB-0002461','LIB-0002481','LIB-0002485','LIB-0002487','LIB-0002497','LIB-0002498','LIB-0002501','LIB-0002505','LIB-0002513','LIB-0002514','LIB-0002516','LIB-0002521','LIB-0002523',
+		'LIB-0002525','LIB-0002536','LIB-0002537','LIB-0002554','LIB-0002648','LIB-0002649','LIB-0002652','LIB-0002654','LIB-0002655','LIB-0002656','LIB-0002658','LIB-0002660','LIB-0002662',
+		'LIB-0002665','LIB-0002667','LIB-0002670','LIB-0002671','LIB-0002672','LIB-0002673','LIB-0002674','LIB-0002677','LIB-0002679','LIB-0002680','LIB-0002686','LIB-0002687','LIB-0002688',
+		'LIB-0002691','LIB-0002701','LIB-0002702','LIB-0002704','LIB-0002725','LIB-0002726','LIB-0002727','LIB-0002728','LIB-0002732','LIB-0002733','LIB-0002742','LIB-0002743','LIB-0002746',
+		'LIB-0002752','LIB-0002753','LIB-0002754','LIB-0002756','LIB-0002762','LIB-0002763','LIB-0002764','LIB-0002765','LIB-0002800','LIB-0002802','LIB-0002803','LIB-0002834','LIB-1718')
+		group by 1
+		oRDER BY 1
+) xsaldo;
+
+
+
+
+-------------------------------------------------------------------------
+Tomar los updates quitar las comillas dobles y ejecutarlos.
+-------------------------------------------------------------------------
+
+
+
 
 -------------------------------------------------------------------------
 ----m_cli_detalle_comprobante_credito	con detalle liquidacion cuota 					
