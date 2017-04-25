@@ -134,3 +134,14 @@ where xh.numero_colocacion in
 'LIB-0002752','LIB-0002753','LIB-0002754','LIB-0002756','LIB-0002762','LIB-0002763','LIB-0002764','LIB-0002765','LIB-0002800','LIB-0002802','LIB-0002803','LIB-0002834','LIB-1718')
 group by 1
 order by 1
+
+--------------------------------------------------------
+Para listar los creditos y los terceros
+-----------------------------------------------------------
+
+select numerocredito,formadeextincion,s_tercero.numero from m_cli_credito_aprobado mcca
+inner join m_cli_cliente on (mcca.m_cli_clienteid=m_cli_cliente.id)
+inner join s_tercero on (s_tercero.id=m_cli_cliente.s_terceroid )
+
+
+
