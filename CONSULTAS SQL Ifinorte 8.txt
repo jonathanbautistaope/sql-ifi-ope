@@ -1543,8 +1543,68 @@ where m_cli_detalle_liquidacion_cuotaid is not null
 -------------------------------------------------------
 Tablas conceptos
 -------------------------------------------------------
+m_cli_concepto_credito
+
+1;"001";"Capital";TRUE;"Capital";;;;"Capital";TRUE;"2017-04-19 10:57:40.314"
+2;"002";"Interes corriente";TRUE;"Interes corriente";;;;"Interes corriente";TRUE;"2017-04-19 10:57:40.314"
+3;"003";"Interes moratorio";TRUE;"Interes moratorio";;;;"Interes moratorio";TRUE;"2017-04-19 10:57:40.314"
+4;"004";"Seguros";TRUE;"Seguros";;;;"Seguros";TRUE;"2017-04-19 10:57:40.314"
+5;"005";"Otros";TRUE;"Otros";;;;"Otros";TRUE;"2017-04-19 10:57:40.314"
+6;"006";"Excedentes";TRUE;"Otros";;;;"Otros";TRUE;"2017-04-19 10:57:40.314"
 
 
+
+select 
+  m_cli_detalle_comprobante_creditoid integer NOT NULL,
+  m_cli_concepto_creditoid integer NOT NULL,
+  valor numeric(20,3) NOT NULL DEFAULT 0,
+  creacion timestamp without time zone NOT NULL DEFAULT now()
+  
+  from m_cli_detalle_concepto
+  
+  
+  ---
+  
+  select mcdcc.id,
+	case when interes_causado>0 then 'update interes_causado'||interes_causado end,
+	case when interes_contingente>0 then 'update interes_contingente' end,
+	case when interes_anticipado>0 then 'update interes_anticipado' end,
+	case when interes_corriente>0 then 'update interes_corriente' end,
+	case when seguro>0 then 'update seguro' end,
+	case when deuda>0 then 'update deuda' end,
+	case when mora>0 then 'update mora'end
+from m_cli_detalle_comprobante_credito mcdcc
+inner join m_cli_credito_aprobado mcca on (mcca.id=mcdcc.m_cli_credito_aprobadoid)
+inner join (select numero_colocacion,fecha_movimiento,
+		SUM(case
+		when POSITION( 'Int. Causado' IN transaccion)>0
+			then coalesce(VALOR_TRANSACCION,0) end)interes_causado,
+		SUM(case
+		when POSITION( 'Int. Contingente' IN transaccion)>0
+			then coalesce(VALOR_TRANSACCION,0) end)interes_contingente,
+
+		SUM(case
+		when POSITION( 'Int. Anticipado' IN transaccion)>0
+			then coalesce(VALOR_TRANSACCION,0) end)interes_anticipado,
+
+		SUM(case
+		when POSITION( 'Int. Corriente' IN transaccion)>0
+			then coalesce(VALOR_TRANSACCION,0) end)interes_corriente,
+			
+		sum(case
+		when POSITION( 'Seguro' IN transaccion)>0 
+			then coalesce(valor_transaccion,0) end ) seguro,
+		sum(case
+		when POSITION( 'Deuda' IN transaccion)>0  
+			then coalesce(valor_transaccion,0) end ) deuda,
+		sum(case
+		when POSITION( 'Mora' IN transaccion)>0  
+			then coalesce(valor_transaccion,0) end ) mora
+		from xeo_historico 
+		where cuota is not null --and xeoh.numero_colocacion='LIB-0002001'
+		group by 1,2) xh on (xh.numero_colocacion=mcca.numerocredito and xh.fecha_movimiento=mcca.fecha)
+		
+		
 
 --------------
 ------------------
