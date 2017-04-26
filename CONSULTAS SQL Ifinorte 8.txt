@@ -118,7 +118,7 @@ END),xpp.fecha_fin_credito,(case
 		when cast(pago_interes as int)=270  then 'Nonamestral'
 		when cast(pago_interes as int)=300 then 'Decamestral'
 		when cast(pago_interes as int)=360 then 'Anual'
-end)||'");'
+end)
 from xeo_historico xh
 --inner join xeo_plandepagos xpp on (xpp.numero_credito=xh.numero_colocacion and xpp.cuota=xh.cuota)
 inner join xeo_plandepagos xpp on (xpp.numero_credito=xh.numero_colocacion and xh.cuota is null)
@@ -1543,6 +1543,7 @@ where m_cli_detalle_liquidacion_cuotaid is not null
 -------------------------------------------------------
 Tablas conceptos
 -------------------------------------------------------
+
 
 
 --------------
