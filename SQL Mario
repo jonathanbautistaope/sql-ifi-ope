@@ -1,0 +1,59 @@
+update m_pre_kardex_presupuesto
+set saldoanteriorsolicitudcdp=COALESCE((select sum(k2.solicitudcdp) from m_pre_kardex_presupuesto k2 where k2.m_pre_numeralid=m_pre_kardex_presupuesto.m_pre_numeralid and k2.id<m_pre_kardex_presupuesto.id),0)
+,
+saldoactualsolicitudcdp=COALESCE((select sum(k2.solicitudcdp) from m_pre_kardex_presupuesto k2 where k2.m_pre_numeralid=m_pre_kardex_presupuesto.m_pre_numeralid and k2.id<=m_pre_kardex_presupuesto.id),0) 
+
+
+-------------------------------------------------
+
+-------------------------------------------------
+
+select m_pre_detalle_cdp.id, m_pre_detalle_cdp.valor, m_pre_kardex_presupuesto.id, m_pre_kardex_presupuesto.cdp
+--, count(m_pre_kardex_presupuesto.id)
+from m_pre_detalle_cdp
+inner join m_pre_cdp on m_pre_cdp.id=m_pre_detalle_cdp.m_pre_cdpid and m_pre_cdp.estado='Autorizado'
+inner join m_pre_kardex_presupuesto on m_pre_detalle_cdp.id=m_pre_kardex_presupuesto.m_pre_detalle_cdpid
+
+where m_pre_kardex_presupuesto.cdp<>m_pre_detalle_cdp.valor
+--group by 1
+--having count(m_pre_kardex_presupuesto.id)>1
+
+-------------------------------------------------
+
+-------------------------------------------------
+select sum(m_pre_detalle_cdp.valor), sum(k.valor)
+from m_pre_cdp
+inner join m_pre_detalle_cdp on
+m_pre_cdp.id=m_pre_detalle_cdp.m_pre_cdpid
+inner join m_pre_numeral on m_pre_numeral.id=m_pre_detalle_cdp.m_pre_numeralid and m_pre_numeral.tipovigencia='Vigencia actual'
+
+left join (select m_pre_detalle_cdpid, sum(cdp) valor
+            from m_pre_kardex_presupuesto
+            group by 1) k on m_pre_detalle_cdp.id=k.m_pre_detalle_cdpid
+
+where m_pre_cdp.estado='Autorizado' --and m_pre_cdp.fecha<='2017-01-31' 
+
+select 
+--m_pre_kardex_presupuesto.*
+s_detalle_solictud_cdp.id,m_pre_kardex_presupuesto.id,
+s_detalle_solictud_cdp.valor,m_pre_kardex_presupuesto.solicitudcdp
+--, count(m_pre_kardex_presupuesto.id)
+
+from s_detalle_solictud_cdp
+inner join s_solicitud_cdp on s_solicitud_cdp.id=s_detalle_solictud_cdp.s_solicitud_cdpid and s_solicitud_cdp.estado='Autorizado'
+inner join m_pre_kardex_presupuesto on s_detalle_solictud_cdp.id=m_pre_kardex_presupuesto.s_detalle_solictud_cdpid
+
+where s_detalle_solictud_cdp.valor<>m_pre_kardex_presupuesto.solicitudcdp
+
+--group by 1
+--having count(m_pre_kardex_presupuesto.id)>1
+
+------------------
+
+select m_pre_detalle_cdp.id, count(m_pre_kardex_presupuesto.id)
+from m_pre_detalle_cdp
+inner join m_pre_cdp on m_pre_cdp.id=m_pre_detalle_cdp.m_pre_cdpid and m_pre_cdp.estado='Autorizado'
+inner join m_pre_kardex_presupuesto on m_pre_detalle_cdp.id=m_pre_kardex_presupuesto.m_pre_detalle_cdpid
+
+group by 1
+having count(m_pre_kardex_presupuesto.id)>1
