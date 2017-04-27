@@ -12,7 +12,7 @@ update xeo_plandepagos set numero_credito= trim (numero_credito);
 ---------------------------------------------------
 
 insert into m_cli_liquidacion_cuota (s_tipo_documentoid, s_tipo_movimientoid, s_vigenciavigencia, s_periodoperiodo, estado, creacion, fecha, descripcion, consecutivo)
-SELECT distinct 41, 186, '2017', 1, 'Autorizado', to_date('01-01-2017','yyyy-mm-dd'), xh.fecha_desembolso ,ced_cliente || ' - ' ||(CASE 
+SELECT distinct 41, 186, '2017', 1, 'Autorizado',  to_date('2017-01-01','yyyy-mm-dd'), xh.fecha_desembolso ,ced_cliente || ' - ' ||(CASE 
 WHEN s_tercero.naturalezajuridica='Natural' 
 	THEN s_tercero.nombre1||' '||COALESCE(s_tercero.nombre2,' ')||' '||s_tercero.apellido1||' '||COALESCE(s_tercero.apellido2,' ')
 WHEN s_tercero.naturalezajuridica='Juridica' 
@@ -32,7 +32,7 @@ order by xh.fecha_desembolso asc
 insert into m_cli_comprobante_credito (m_con_centro_contableid, s_tipo_documentoid, s_tipo_movimientoid, s_vigenciavigencia, s_periodoperiodo, estadocomprobantecredito, creacion, fecha, descripcion, 
 fecharealdepago,consecutivo,s_terceroid) 
 SELECT distinct 
-1, 42, 187, '2017', 1, 'Autorizado',to_date('01-01-2017','yyyy-mm-dd'),  xh.fecha_movimiento , 'Nro.Doc: '||xh.ced_cliente ||'-'||
+1, 42, 187, '2017', 1, 'Autorizado', to_date('2017-01-01','yyyy-mm-dd'),  xh.fecha_movimiento , 'Nro.Doc: '||xh.ced_cliente ||'-'||
 (CASE 
 WHEN s_tercero.naturalezajuridica='Natural' 
 	THEN s_tercero.nombre1||' '||COALESCE(s_tercero.nombre2,' ')||' '||s_tercero.apellido1||' '||COALESCE(s_tercero.apellido2,' ')
@@ -102,7 +102,7 @@ END),xpp.modo_pago,xh.numero_colocacion,xpp.fecha_desembolso,cast(MAX(to_char(ex
 WHEN xh.numero_colocacion like '%LIB%' THEN 'Cuota creciente'
 ELSE 'Cuota constante' 
 END),xpp.tasa_ea,'Fijo','Vencido',					CAST(xpp.puntos_spread as NUMERIC(20,4) ),
-m_cli_cliente.id,2,to_date('01-01-2017','yyyy-mm-dd'),
+m_cli_cliente.id,2, to_date('2017-01-01','yyyy-mm-dd'),
 MAX (CASE 
 WHEN xh.numero_colocacion like '%LIB%' THEN valor_cuota
 ELSE 0 
@@ -216,7 +216,7 @@ SELECT --Solo las cuotas que tienen movimiento en el historico
 	coalesce(valor_seguro,0) , --cuotaseguro
 	0 , --saldoactualseguro
 	0 , --saldonuevocredito
-	to_date('01-01-2017','yyyy-mm-dd') , --creacion
+	 to_date('2017-01-01','yyyy-mm-dd'), --creacion
 	0 , --saldoanteriorseguro
 	coalesce(xh.deuda,0) , --abonocapital
 	coalesce(xh.interes_corriente,0) , --abonocorriente
@@ -295,7 +295,7 @@ SELECT --Las cuotas que no tienen movimiento en el historico
 	coalesce(valor_seguro,0)     ,	--cuotaseguro
 	0 ,								--saldoactualseguro
 	0 , 								--saldonuevocredito
-	to_date('01-01-2017','yyyy-mm-dd'),					--creacion
+	 to_date('2017-01-01','yyyy-mm-dd'),					--creacion
 	0 ,							--saldoanteriorseguro
 	0 ,								--abonocapital
 	0 ,								--abonocorriente
@@ -361,7 +361,7 @@ SELECT  --para aquellos creditos que solo tienen una cuota a pagar
 	coalesce(valor_seguro,0) , --cuotaseguro
 	0 ,  --saldoactualseguro
 	0 , --saldonuevocredito
-	to_date('01-01-2017','yyyy-mm-dd') , --creacion
+	 to_date('2017-01-01','yyyy-mm-dd'), --creacion
 	0 , -- saldoanteriorseguro
 	0 , --abonocapital
 	0 , --abonocorriente
@@ -429,7 +429,7 @@ SELECT --Solo los creditos que tienen cuota cero y que ya tienen un movimiento e
 	0 , --cuotaseguro
 	0 , --saldoactualseguro
 	0 ,  --saldonuevocredito
-	to_date('01-01-2017','yyyy-mm-dd') , --creacion
+	 to_date('2017-01-01','yyyy-mm-dd') , --creacion
 	0 ,--saldoanteriorseguro
 	0 ,--abonocapital
 	0 ,--abonocorriente
@@ -531,7 +531,7 @@ SELECT mclc.id,--m_cli_liquidacion_cuotaid
 	coalesce(xh.seguro,0)  ,--cuotaseguro
 	0 ,--saldoactualseguro
 	0 , --saldonuevocredito
-	to_date('01-01-2017','yyyy-mm-dd'),--creacion
+	to_date('2017-01-01','yyyy-mm-dd'),--creacion
 	0 ,--saldoanteriorseguro
 	coalesce(xh.deuda,0) ,--abonocapital
 	coalesce(xh.interes_corriente,0) ,--abonocorriente
@@ -613,7 +613,7 @@ SELECT --Las cuotas que no tienen movimiento en el historico
 	coalesce(valor_seguro,0),--cuotaseguro
 	0 ,						--saldoactualseguro
 	0 ,--saldonuevocredito
-	to_date('01-01-2017','yyyy-mm-dd'),--creacion
+	to_date('2017-01-01','yyyy-mm-dd'),--creacion
 	0 ,								--saldoanteriorseguro
 	0 ,--abonocapital
 	0 ,--abonocorriente
@@ -679,7 +679,7 @@ SELECT  --para aquellos creditos que solo tienen una cuota a pagar
 	coalesce(valor_seguro,0)    ,--cuotaseguro
 	0,--saldoactualseguro
 	0 ,--saldonuevocredito
-	to_date('01-01-2017','yyyy-mm-dd'), --creacion
+	to_date('2017-01-01','yyyy-mm-dd'), --creacion
 	0 , -- saldoanteriorseguro
 	0 , --abonocapital
 	0 , --abonocorriente
@@ -747,7 +747,7 @@ SELECT --Solo los creditos que tienen cuota cero y que ya tienen un movimiento e
 	0 , --cuotaseguro
 	0 , --saldoactualseguro
 	0 , --saldonuevocredito
-	to_date('01-01-2017','yyyy-mm-dd'), --creacion
+	to_date('2017-01-01','yyyy-mm-dd'), --creacion
 	0 ,--saldoanteriorseguro
 	0 ,--abonocapital
 	0 ,--abonocorriente
@@ -988,8 +988,14 @@ from
 Tomar los updates quitar las comillas dobles y ejecutarlos.
 -------------------------------------------------------------------------
 
-
-
+-------------------------------------------------------------------------
+Se actualiza la informacion de los saldos, debido al cambio en la informacion de los saldos
+-------------------------------------------------------------------------
+update 	m_cli_detalle_liquidacion_cuota 			
+set 	saldonuevocredito = coalesce(saldoactualcapital,0) 	+ 
+	coalesce(saldoactualcorriente,0) 			+ 
+	coalesce(saldoactualmoratorios,0) 			+ 
+	coalesce(saldoactualseguro,0) ;
 
 -------------------------------------------------------------------------
 ----m_cli_detalle_comprobante_credito	con detalle liquidacion cuota 					
@@ -998,7 +1004,7 @@ Tomar los updates quitar las comillas dobles y ejecutarlos.
 insert into m_cli_detalle_comprobante_credito 
 (m_cli_comprobante_creditoid,m_cli_credito_aprobadoid,creacion,m_cli_detalle_liquidacion_cuotaid,descripcion,valor)
 select 
-mccc.id,mcca.id,to_date('01-01-2017','yyyy-mm-dd'),mcdlc.id,mccc.descripcion,xh.valor
+mccc.id,mcca.id, to_date('2017-01-01','yyyy-mm-dd'),mcdlc.id,mccc.descripcion,xh.valor
 from
 (select numero_colocacion,fecha_movimiento,cuota,sum(coalesce(valor_transaccion,0)) valor
 from xeo_historico
@@ -1186,7 +1192,7 @@ select
 	42,187,2017,1,--s_tipo_documentoid,s_tipo_movimientoid,s_vigenciavigencia,s_periodoperiodo,	
 	xh.fecha_movimiento , --fecha_transaccion
 	'admin@siep.com' , --username
-	to_date('01-01-2017','yyyy-mm-dd') , --creacion
+	 to_date('2017-01-01','yyyy-mm-dd'), --creacion
 	mcca.id,
 	xh.valor_desembolso  ,--coalesce(xh.interes_corriente,0)+coalesce(xh.seguro,0)+coalesce(xh.deuda,0)+coalesce(xh.mora,0) ||','||--acumulado cargo capital
 	coalesce(xh.deuda,0) , --acumulado abono capital
