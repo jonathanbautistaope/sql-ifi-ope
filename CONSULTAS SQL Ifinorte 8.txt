@@ -25,6 +25,13 @@ WHERE xh.fecha_desembolso IS NOT NULL
 
 order by xh.fecha_desembolso asc 
 
+-------------------------------------------------------
+Para modificar los consecutivo
+-------------------------------------------------------
+update m_cli_liquidacion_cuota mccc1 set consecutivo= (select to_char(count(mccc2.id)+1,'FM09999999') 
+from m_cli_liquidacion_cuota mccc2
+where mccc2.id<mccc1.id)
+
 ---------------------------------------------------
 ---m_cli_comprobante_credito
 ---------------------------------------------------
@@ -55,6 +62,53 @@ inner join s_tercero on (xh.ced_cliente=s_tercero.numero)
 
 --WHERE XH.numero_colocacion in ('CAR-181')
 ORDER BY xh.fecha_movimiento
+
+------------------------------------------------------------------------------------------
+Insertar los creditos que no tienen movimiento en historico pero que tienen desembolso.
+------------------------------------------------------------------------------------------
+
+insert into m_cli_comprobante_credito (m_con_centro_contableid, s_tipo_documentoid, s_tipo_movimientoid, s_vigenciavigencia, s_periodoperiodo, estadocomprobantecredito, creacion, fecha, descripcion, 
+fecharealdepago,consecutivo,s_terceroid) 
+SELECT 1, 42, 230, '2017', 1, 'Autorizado', to_date('2017-01-01','yyyy-mm-dd'),  xh.fecha_desembolso , 'Nro.Doc: '||xh.ced_cliente ||'-'||
+(CASE 
+WHEN s_tercero.naturalezajuridica='Natural' 
+	THEN s_tercero.nombre1||' '||COALESCE(s_tercero.nombre2,' ')||' '||s_tercero.apellido1||' '||COALESCE(s_tercero.apellido2,' ')
+WHEN s_tercero.naturalezajuridica='Juridica' 
+	THEN s_tercero.razonsocial
+END) || ' - ' ||  ' - Num.Credito:' || xh.numero_colocacion , 
+case 
+when (xh.numero_colocacion like '%LIB%') then to_date(To_char(date_trunc('month',xh.fecha_desembolso)  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd'), 'yyyy-mm-dd') 
+else to_date(To_char(date_trunc('month',xh.fecha_desembolso)  +'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd'), 'yyyy-mm-dd')
+END ,
+(SELECT to_char(cast(coalesce(max(consecutivo),'0') as int)+1,'FM09999999') from m_cli_comprobante_credito),
+s_tercero.ID
+from (
+	select numero_colocacion,ced_cliente,fecha_desembolso,numero_doc,count(*)
+	from xeo_historico
+	WHERE FECHA_MOVIMIENTO IS NULL
+	group by numero_colocacion,ced_cliente,fecha_desembolso,numero_doc
+	) xh
+inner join s_tercero on (xh.ced_cliente=s_tercero.numero)
+inner join (
+		select numerocredito --si esta consulta se modifica debe modificarse en el insert select que sigue,donde dice:(select sin mov.)
+		from m_cli_credito_aprobado
+		where numerocredito
+		not in (select distinct mcca.numerocredito
+		from m_cli_kardex_credito mckc
+		inner join m_cli_credito_aprobado mcca on (mckc.m_cli_credito_aprobadoid=mcca.id) )
+	)kardex_num on (xh.numero_colocacion=kardex_num.numerocredito)
+
+
+
+--------------------------------------------------
+Para cambiar los consecutivos
+------------------------------------------------------
+update m_cli_comprobante_credito mccc1 set consecutivo= (select to_char(count(mccc2.id)+1,'FM09999999') 
+from m_cli_comprobante_credito mccc2
+where mccc2.id<mccc1.id)
+
+select * from m_cli_comprobante_credito --Verificar consulta de informacion
+order by fecharealdepago,id
 
 
 //****** Montar el s_autoriza
@@ -478,6 +532,7 @@ AND CAST(COALESCE(xpp.cuota,'0') AS INTEGER)=0
 -------------------------------------------------------------------------
 Subir los planes de pagos y el detalle 
 -------------------------------------------------------------------------
+
 insert into m_cli_plan_pagos (consecutivo,fecha,estado,descripcion,fechaanulacion,creacion)
 select consecutivo,fecha,estado,descripcion,null,creacion
  from m_cli_liquidacion_cuota;
@@ -1027,7 +1082,41 @@ inner join
 	fecha
 	from m_cli_comprobante_credito) mccc
 		on (trim(xh.numero_colocacion) = trim(mccc.credito) and (mccc.fecha=xh.fecha_movimiento))
+		
+		
+-------------------------------------------------------------------------------------------------
+Insertar el detalle de los creditos que no tienen movimiento en historico
+------------------------------------------------------------------------------------------------
+/*insert into m_cli_detalle_comprobante_credito 
+(m_cli_comprobante_creditoid,m_cli_credito_aprobadoid,creacion,m_cli_detalle_liquidacion_cuotaid,descripcion,valor)*/
+select 
+mccc.id,mcca.id, to_date('2017-01-01','yyyy-mm-dd'),mcdlc.id,mccc.descripcion,xh.valor
+from
+(select numero_colocacion,fecha_desembolso,valor_desembolso valor
+from xeo_historico
+where cuota is null
+group by 1,2,3) xh
+
+inner join 
+	(
+	select id,numerocredito 
+	from m_cli_credito_aprobado
+	where numerocredito
+	not in (select distinct mcca1.numerocredito
+		from m_cli_kardex_credito mckc
+		inner join m_cli_credito_aprobado mcca1 on (mckc.m_cli_credito_aprobadoid=mcca1.id) )
+	)mcca on (trim(mcca.numerocredito)=trim(xh.numero_colocacion) )
+
+inner join 
+	m_cli_detalle_liquidacion_cuota mcdlc
+		on (mcdlc.m_cli_credito_aprobadoid=mcca.id) 
 					
+inner join 
+	(select 
+	descripcion,substring(descripcion from position ('Num.Credito:' in descripcion)+12 for char_length(descripcion)) as credito,id,
+	fecha
+	from m_cli_comprobante_credito) mccc
+		on (trim(xh.numero_colocacion) = trim(mccc.credito) and (mccc.fecha=xh.fecha_desembolso))
 
 ------------------------------------------------------------------------------------------------
 ----m_cli_kardex_credito 
