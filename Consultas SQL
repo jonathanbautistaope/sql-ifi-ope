@@ -1,3 +1,48 @@
+----------------------------------------------
+Revision de 
+----------------------------------------------
+select mcca.numerocredito ,mckc.m_cli_detalle_liquidacion_cuotaid,mckc.*
+from m_cli_kardex_credito mckc
+inner join m_cli_credito_aprobado mcca on (mckc.m_cli_credito_aprobadoid=mcca.id) 
+where mcca.numerocredito='LIB-001906'
+order by mckc.id,
+fechatransaccion,m_cli_detalle_liquidacion_cuotaid;
+
+select ced_cliente,numero_colocacion,cuota,--valor_desembolso,
+		/*SUM(case when POSITION( 'Int.' IN transaccion)>0 then VALOR_TRANSACCION end)  interes_corriente,
+		sum(case when POSITION( 'Seguro' IN transaccion)>0 then valor_transaccion end ) seguro,*/
+		sum(case when POSITION( 'Deuda' IN transaccion)>0  then valor_transaccion end ) deuda
+		/*sum(case when POSITION( 'Mora' IN transaccion)>0 then valor_transaccion end ) mora,
+		sum(saldo_capital)*/
+		from xeo_historico
+		where cuota is not null and numero_colocacion='LIB-0001614' and POSITION( 'Deuda' IN transaccion)>0 
+		group by 1,2,3
+		
+SELECT m_cli_kardex_credito.id,
+    cr.montoaprobado,
+    m_cli_kardex_credito.acumuladocargocapital + m_cli_kardex_credito.acumuladomoragenerada + m_cli_kardex_credito.acumuladocorrientegenerado + m_cli_kardex_credito.acumuladocuotaseguro + m_cli_kardex_credito.acumuladootros - (m_cli_kardex_credito.acumuladoabonocapital + m_cli_kardex_credito.acumuladoabonocorriente + m_cli_kardex_credito.acumuladoabonoseguro::numeric + m_cli_kardex_credito.acumuladoabonomora + m_cli_kardex_credito.acumuladoabonootros) AS saldoactual,
+
+    m_cli_kardex_credito.acumuladocargocapital ,  m_cli_kardex_credito.acumuladoabonocapital , 
+    m_cli_kardex_credito.acumuladomoragenerada , m_cli_kardex_credito.acumuladoabonomora ,
+    m_cli_kardex_credito.acumuladocorrientegenerado , m_cli_kardex_credito.acumuladoabonocorriente ,
+     m_cli_kardex_credito.acumuladocuotaseguro ,m_cli_kardex_credito.acumuladoabonoseguro::numeric ,
+    m_cli_kardex_credito.acumuladootros ,    m_cli_kardex_credito.acumuladoabonootros
+    
+   FROM m_cli_kardex_credito
+     JOIN ( SELECT max(m_cli_kardex_credito_1.id) AS idmax
+           FROM m_cli_kardex_credito m_cli_kardex_credito_1
+          GROUP BY m_cli_kardex_credito_1.m_cli_credito_aprobadoid) maxkardexcredito ON maxkardexcredito.idmax = m_cli_kardex_credito.id
+     left JOIN m_cli_detalle_comprobante_credito detcomcr ON detcomcr.id = m_cli_kardex_credito.m_cli_detalle_comprobante_creditoid
+     JOIN m_cli_credito_aprobado cr ON cr.id = detcomcr.m_cli_credito_aprobadoid
+     JOIN m_cli_cliente cli ON cli.id = cr.m_cli_clienteid
+     JOIN s_tercero ter ON ter.id = cli.s_terceroid
+     JOIN s_tipo_identificacion tipoiden ON tipoiden.id = ter.s_tipo_identificacionid
+     JOIN m_cli_detalle_aprobacion dacr ON dacr.id = cr.m_cli_detalle_aprobacionid
+     JOIN m_cli_solicitud_credito scr ON scr.id = dacr.m_cli_solicitud_creditoid
+     JOIN m_cli_servicio_colocacion sco ON sco.id = scr.m_cli_servicio_colocacionid
+
+          where detcomcr.m_cli_credito_aprobadoid=2
+
 --------------------------------------
 Para hacer cruce de informacion es decir consultar solo lo
 --------------------------------------
