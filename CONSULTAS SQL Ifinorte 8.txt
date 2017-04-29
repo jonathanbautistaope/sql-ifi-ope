@@ -1046,11 +1046,27 @@ Tomar los updates quitar las comillas dobles y ejecutarlos.
 -------------------------------------------------------------------------
 Se actualiza la informacion de los saldos, debido al cambio en la informacion de los saldos
 -------------------------------------------------------------------------
+
 update 	m_cli_detalle_liquidacion_cuota 			
 set 	saldonuevocredito = coalesce(saldoactualcapital,0) 	+ 
 	coalesce(saldoactualcorriente,0) 			+ 
 	coalesce(saldoactualmoratorios,0) 			+ 
 	coalesce(saldoactualseguro,0) ;
+
+---------------------------------------------------------------------------------------------------------------------------------
+Se agrega un dia a la fecha inicioliquidacion debido a que se estaban duplicando la fecha final y la fecha inicial en las cuotas.
+---------------------------------------------------------------------------------------------------------------------------------
+
+select mcdlc1.m_cli_credito_aprobadoid,numerocuota,inicioliquidacion+1
+ from m_cli_detalle_liquidacion_cuota mcdlc1 
+ inner join (select m_cli_credito_aprobadoid,min(id)min_id from m_cli_detalle_liquidacion_cuota
+group by m_cli_credito_aprobadoid) mcdlc on (mcdlc.m_cli_credito_aprobadoid=mcdlc1.m_cli_credito_aprobadoid and mcdlc1.id>mcdlc.min_id)
+
+update m_cli_detalle_liquidacion_cuota mcdlc1
+set inicioliquidacion =inicioliquidacion+1
+from 
+ (select m_cli_credito_aprobadoid,min(id)min_id from m_cli_detalle_liquidacion_cuota
+group by m_cli_credito_aprobadoid) mcdlc where (mcdlc.m_cli_credito_aprobadoid=mcdlc1.m_cli_credito_aprobadoid and mcdlc1.id>mcdlc.min_id)
 
 -------------------------------------------------------------------------
 ----m_cli_detalle_comprobante_credito	con detalle liquidacion cuota 					
