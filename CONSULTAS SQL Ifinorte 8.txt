@@ -1660,7 +1660,7 @@ Tablas conceptos
   
   ---
   
-  select mcdcc.id,xh.numero_colocacion,
+ select mcdcc.id,xh.numero_colocacion,
 	case when interes_causado>0 then 
 	'insert into m_cli_detalle_concepto (m_cli_detalle_comprobante_creditoid,m_cli_concepto_creditoid,valor,creacion) values ('||mcdcc.id||',8,'||interes_causado||',"2017-01-01");' end,
 	case when interes_contingente>0 then 'insert into m_cli_detalle_concepto (m_cli_detalle_comprobante_creditoid,m_cli_concepto_creditoid,valor,creacion) values ('||mcdcc.id||',7,'||interes_contingente||',"2017-01-01");' end,
@@ -1668,7 +1668,7 @@ Tablas conceptos
 	case when interes_corriente>0 then 'insert into m_cli_detalle_concepto (m_cli_detalle_comprobante_creditoid,m_cli_concepto_creditoid,valor,creacion) values ('||mcdcc.id||',2,'||interes_corriente||',"2017-01-01");' end,
 	case when seguro>0 then 'insert into m_cli_detalle_concepto (m_cli_detalle_comprobante_creditoid,m_cli_concepto_creditoid,valor,creacion) values ('||mcdcc.id||',4,'||seguro||',"2017-01-01");' end,
 	case when deuda>0 then 'insert into m_cli_detalle_concepto (m_cli_detalle_comprobante_creditoid,m_cli_concepto_creditoid,valor,creacion) values ('||mcdcc.id||',1,'||deuda||',"2017-01-01");' end,
-	case when mora>0 then 'insert into m_cli_detalle_concepto (m_cli_detalle_comprobante_creditoid,m_cli_concepto_creditoid,valor,creacion) values ('||mcdcc.id||',1,'||mora||',"2017-01-01");'end
+	case when mora>0 then 'insert into m_cli_detalle_concepto (m_cli_detalle_comprobante_creditoid,m_cli_concepto_creditoid,valor,creacion) values ('||mcdcc.id||',3,'||mora||',"2017-01-01");'end
 from 
 (select mcdcc1.id,fecha , trim(substring(mccc.descripcion from position ('Num.Credito:' in mccc.descripcion)+12 for char_length(mccc.descripcion))) numerocredito
 from m_cli_detalle_comprobante_credito mcdcc1
@@ -1701,6 +1701,7 @@ inner join (select numero_colocacion,fecha_movimiento,
 		from xeo_historico 
 		where cuota is not null --and xeoh.numero_colocacion='LIB-0002001'
 		group by 1,2) xh on (xh.numero_colocacion=mcdcc.numerocredito and xh.fecha_movimiento=mcdcc.fecha)
+		
 		
 --------------
 ------------------
