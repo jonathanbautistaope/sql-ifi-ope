@@ -15,7 +15,7 @@
 //******************************
 //**********************************
 		
-		PLAN DE PAGOS
+		Select para PLAN DE PAGOS 
 		
 //******************************************
 //***************************************************
@@ -79,12 +79,6 @@ left JOIN (SELECT suc_cc,tip_cc,lin_cc,num_cc,cuota_cc,cam_cc,sum(cargo_cc) as c
 --LIB-0002118
 --LIB-0002312
 
------------------------------------------------------------------------------------------------------------------
-Credito con diferncia en el valor de plan de pago impreso y el plan de pagos de la tabla cf_aux_cargcuo por seguro
------------------------------------------------------------------------------------------------------------------
-
-UPDATE xeo_plandepagos SET VALOR_SEGURO=15229 where numero_credito='LIB-0002290';
-
 //******************************
 //**********************************
 		
@@ -134,16 +128,21 @@ left JOIN (SELECT suc_cc,tip_cc,lin_cc,num_cc,cuota_cc,cam_cc,sum(cargo_cc) as c
                                                                     cac.suc_cc=ccc.suc_cuo and
                                                                     cac.tip_cc=ccc.tip_car_cuo AND 
                                                                     cac.cuota_cc=ccc.num_cuo)
+								    
+-----------------------------------------------------------------------------------------------------------------
+Credito con diferncia en el valor de plan de pago impreso y el plan de pagos de la tabla cf_aux_cargcuo por seguro
+-----------------------------------------------------------------------------------------------------------------
+
+UPDATE xeo_plandepagos SET VALOR_SEGURO=15229 where numero_credito='LIB-0002290';
 
   
 //******************************
 //**********************************
 		
-	HISTORICO
+	Select HISTORICO
 		
 //******************************************
 //***************************************************
-  
 
 select  
 pagare_m AS NUMERO_COLOCACION,
@@ -177,7 +176,7 @@ from CF_MOVIMIENTOS --where PAGARE_M='LIB-0002001')
 )a
 
 //***************************
-insert
+insert HISTORICO
 //**************************
 
 ------detalle son todos los movimientos que han tenido todos los creditos.
