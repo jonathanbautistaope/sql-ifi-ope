@@ -1,3 +1,24 @@
+---------------------------------------------
+Borrar toda la informacion
+---------------------------------------------
+
+delete from m_cli_detalle_plan_pagos;
+delete from m_cli_plan_pagos;
+delete from m_cli_credito_aprobado;
+delete from xeo_historico;
+delete from xeo_plandepagos;
+delete from m_cli_comprobante_credito;
+delete from m_cli_detalle_liquidacion_cuota;
+delete from m_cli_liquidacion_cuota;
+delete from m_cli_detalle_comprobante_credito;
+delete from m_cli_kardex_credito;
+delete from m_cli_kardex_cuota;
+delete from m_cli_detalle_concepto;
+
+------------------------------------------------
+Inicializar las secuencias
+-----------------------------------------------
+
 
 ///*****Select a tablas que se utilizan
 --select plazo_desem from cf_cue_desem ccd where num_desem='LIB-0001516' --UN REGISTRO
