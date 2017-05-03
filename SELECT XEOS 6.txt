@@ -55,8 +55,8 @@ SELECT  trim(ccc.num_cre_cuo)  as credito,
         ccd.cuo_ord_liq_desem AS NUMERO_CUOTAS, 
         ccd.per_pag_i_desem AS PAGO_INTERES, 
         cast (ccd.pun_adi_tas_desem as numeric(15,3)) as PUNTOS_SPREAD,
-        coalesce (cast( (power( 1 + (ccd.por_tasa_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) )-1 ) * 100 as numeric(15,4)) ,0) AS TASA_EA,//SE DEBE COMPARAR ESTE VALOR CON EL DE PLAN DE PAGOS PGADMIN --por_tasa_desem AS TASA,--TAS_PER_DESEM
-        coalesce(CAST( (power (cast(1 + (cast( (power( 1 + (ccd.por_tasa_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) )-1 ) * 100 as numeric(15,12)))/100 as numeric(15,12)) ,cast(1/cast(12/(cast(ccd.per_pag_k_desem/30 as numeric(15,12)) )as numeric(15,12)) as numeric(15,12)) ) -1) * 12 * 100 AS numeric(15,3)),0) as TASA_PERIODO,
+        coalesce (cast( (power( 1 + (ccd.tas_per_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) )-1 ) * 100 as numeric(15,4)) ,0) AS TASA_EA,//SE DEBE COMPARAR ESTE VALOR CON EL DE PLAN DE PAGOS PGADMIN --por_tasa_desem AS TASA,--TAS_PER_DESEM
+        coalesce(CAST( (power (cast(1 + (cast( (power( 1 + (ccd.tas_per_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) )-1 ) * 100 as numeric(15,12)))/100 as numeric(15,12)) ,cast(1/cast(12/(cast(ccd.per_pag_k_desem/30 as numeric(15,12)) )as numeric(15,12)) as numeric(15,12)) ) -1) * 12 * 100 AS numeric(15,3)),0) as TASA_PERIODO,
         cast (plazo_desem/30 as integer) AS PLAZO, --PASAR A MESES SE ENCUENTRA EN DIAS
 	(case 
 		per_pag_k_desem/30
@@ -101,23 +101,6 @@ left JOIN (SELECT suc_cc,tip_cc,lin_cc,num_cc,cuota_cc,cam_cc,sum(cargo_cc) as c
 --LIB-0002312
 
 
-update xeo_plandepagos set old_tasa_periodo=tasa_periodo;
-
-update xeo_plandepagos set tasa_periodo = tasa_periodo/(CASE 	WHEN MODO_PAGO='Mensual' then 12/1
-		WHEN MODO_PAGO='Bimestral' then 12/2
-		WHEN MODO_PAGO='Trimestral' then 12/3
-		WHEN MODO_PAGO='Cuatrimestral' then 12/4
-		WHEN MODO_PAGO='Pentamestral' then 12/5
-		WHEN MODO_PAGO='Semestral' then cast (12/6 as integer)
-		WHEN MODO_PAGO='Septamestral' then cast (12/7 as integer)
-		WHEN MODO_PAGO='Octamestral' then cast (12/8 as integer)
-		WHEN MODO_PAGO='Nonamestral' then cast (12/9 as integer)
-		WHEN MODO_PAGO='Decamestral' then cast (12/10 as integer)
-		WHEN MODO_PAGO='Oncemestral' then cast (12/11 as integer)
-		WHEN MODO_PAGO='Anual' then cast (12/12 as integer)
-		
-	end );
-
 //******************************
 //**********************************
 		
@@ -130,8 +113,8 @@ SELECT  'insert into xeo_plandepagos (numero_credito,cuota,ced_cliente,fecha_ven
 		'"'||trim(ccc.num_cre_cuo)||'","'||ccc.num_cuo||'",'||ccd.cliente_desem||',"'||ccc.f_vence_cuo||'",'||coalesce(ccc.car_cap + ccc.car_int,0)||','||
         coalesce(ccc.car_int,0)||','||coalesce(ccc.car_cap,0)||','||coalesce(cac.cc_cargo,0)||',"'||ccd.linea_desem||'",'||ccd.valor_desem||',"'||
         ccd.cuo_ord_liq_desem||'","'||ccd.per_pag_i_desem||'","'||cast (ccd.pun_adi_tas_desem as numeric(15,3))||'",'||
-        coalesce (cast( (power( 1 + (ccd.por_tasa_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) )-1 ) * 100 as numeric(15,4)) ,0) ||','||
-        coalesce(CAST( (power (cast(1 + (cast( (power( 1 + (ccd.por_tasa_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) )-1 ) * 100 as numeric(15,12)))/100 as numeric(15,12)) ,cast(1/cast(12/(cast(ccd.per_pag_k_desem/30 as numeric(15,12)) )as numeric(15,12)) as numeric(15,12)) ) -1) * 12 * 100 AS numeric(15,3)),0)||','||
+        coalesce (cast( (power( 1 + (ccd.tas_per_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) )-1 ) * 100 as numeric(15,4)) ,0) ||','||
+        coalesce(CAST( (power (cast(1 + (cast( (power( 1 + (ccd.tas_per_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) )-1 ) * 100 as numeric(15,12)))/100 as numeric(15,12)) ,cast(1/cast(12/(cast(ccd.per_pag_k_desem/30 as numeric(15,12)) )as numeric(15,12)) as numeric(15,12)) ) -1) * 12 * 100 AS numeric(15,3)),0)||','||
         cast (plazo_desem/30 as integer)||',"'||
 	(case 
 		per_pag_k_desem/30
@@ -166,7 +149,26 @@ left JOIN (SELECT suc_cc,tip_cc,lin_cc,num_cc,cuota_cc,cam_cc,sum(cargo_cc) as c
                                                                     cac.lin_cc=ccc.lin_cuo AND 
                                                                     cac.suc_cc=ccc.suc_cuo and
                                                                     cac.tip_cc=ccc.tip_car_cuo AND 
-                                                                    cac.cuota_cc=ccc.num_cuo)
+                                                                    cac.cuota_cc=ccc.num_cuo);
+
+
+update xeo_plandepagos set old_tasa_periodo=tasa_periodo;
+
+
+update xeo_plandepagos set tasa_periodo = tasa_periodo/(CASE 	WHEN MODO_PAGO='Mensual' then 12/1
+		WHEN MODO_PAGO='Bimestral' then 12/2
+		WHEN MODO_PAGO='Trimestral' then 12/3
+		WHEN MODO_PAGO='Cuatrimestral' then 12/4
+		WHEN MODO_PAGO='Pentamestral' then 12/5
+		WHEN MODO_PAGO='Semestral' then cast (12/6 as integer)
+		WHEN MODO_PAGO='Septamestral' then cast (12/7 as integer)
+		WHEN MODO_PAGO='Octamestral' then cast (12/8 as integer)
+		WHEN MODO_PAGO='Nonamestral' then cast (12/9 as integer)
+		WHEN MODO_PAGO='Decamestral' then cast (12/10 as integer)
+		WHEN MODO_PAGO='Oncemestral' then cast (12/11 as integer)
+		WHEN MODO_PAGO='Anual' then cast (12/12 as integer)
+		
+	end );
 								    
 -----------------------------------------------------------------------------------------------------------------
 Credito con diferncia en el valor de plan de pago impreso y el plan de pagos de la tabla cf_aux_cargcuo por seguro
