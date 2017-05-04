@@ -114,7 +114,7 @@ SELECT  'insert into xeo_plandepagos (numero_credito,cuota,ced_cliente,fecha_ven
         coalesce(ccc.car_int,0)||','||coalesce(ccc.car_cap,0)||','||coalesce(cac.cc_cargo,0)||',"'||ccd.linea_desem||'",'||ccd.valor_desem||',"'||
         ccd.cuo_ord_liq_desem||'","'||ccd.per_pag_i_desem||'","'||cast (ccd.pun_adi_tas_desem as numeric(15,3))||'",'||
         coalesce (cast( (power( 1 + (ccd.tas_per_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) )-1 ) * 100 as numeric(15,4)) ,0) ||','||
-        coalesce(CAST( (power (cast(1 + (cast( (power( 1 + (ccd.tas_per_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) )-1 ) * 100 as numeric(15,12)))/100 as numeric(15,12)) ,cast(1/cast(12/(cast(ccd.per_pag_k_desem/30 as numeric(15,12)) )as numeric(15,12)) as numeric(15,12)) ) -1) * 12 * 100 AS numeric(15,3)),0)||','||
+        coalesce (ccd.tas_per_desem,0)||','||
         cast (plazo_desem/30 as integer)||',"'||
 	(case 
 		per_pag_k_desem/30
@@ -150,6 +150,9 @@ left JOIN (SELECT suc_cc,tip_cc,lin_cc,num_cc,cuota_cc,cam_cc,sum(cargo_cc) as c
                                                                     cac.suc_cc=ccc.suc_cuo and
                                                                     cac.tip_cc=ccc.tip_car_cuo AND 
                                                                     cac.cuota_cc=ccc.num_cuo);
+--WHERE ccc.num_cre_cuo='CAR-190'
+
+
 
 
 update xeo_plandepagos set old_tasa_periodo=tasa_periodo;
@@ -263,3 +266,16 @@ update xeo_historico set transaccion='10-Seguro Prima SI' where transaccion='10'
 update xeo_historico set transaccion='02-Mora' where transaccion='02';
 update xeo_historico set transaccion='04-Int. Corriente' where transaccion='04';
 update xeo_historico set transaccion='05-Int. Anticipado' where transaccion='05';
+
+
+----------------------------------------------------
+Para cambiar las tasas en las tablas ya subidas.
+-----------------------------------------------------
+
+SELECT DISTINCT 'UPDATE XEO_PLANDEPAGOS SET TASA_EA='||TASA_EA||',TASA_PERIODO='||TASA_PERIODO||',OLD_TASA_PERIODO='||OLD_TASA_PERIODO||' WHERE NUMERO_CREDITO='''||TRIM(NUMERO_CREDITO)||''';',
+'UPDATE M_CLI_CREDITO_APROBADO SET tasainterespactada='||TASA_EA||' WHERE NUMEROCREDITO='''||TRIM(NUMERO_CREDITO)||''';',
+'UPDATE M_CLI_DETALLE_LIQUIDACION_CUOTA MCDLC SET porcentajecorriente='||TASA_PERIODO||' FROM M_CLI_CREDITO_APROBADO MCCA WHERE MCCA.ID=MCDLC.M_CLI_CREDITO_APROBADOID AND NUMEROCREDITO='''||TRIM(NUMERO_CREDITO)||''';'
+ FROM XEO_PLANDEPAGOS
+ 
+ 
+
