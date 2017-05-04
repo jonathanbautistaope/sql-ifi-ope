@@ -1,3 +1,11 @@
+-----------------------------------------------
+Verificar el porcentaje corriente
+-----------------------------------------------
+SELECT PORCENTAJECORRIENTE
+FROM M_CLI_DETALLE_LIQUIDACION_CUOTA MCDLC
+INNER JOIN M_CLI_CREDITO_APROBADO MCCA ON  MCDLC.M_CLI_CREDITO_APROBADOID=MCCA.ID AND NUMEROCREDITO='LIB-0001762.'
+
+
 ----------------------------------------------
 Revision de 
 ----------------------------------------------
