@@ -121,6 +121,12 @@ set  m_cli_detalle_aprobacionid =3
 where SUBSTRING(NUMEROCREDITO FROM 1 FOR 4)='2010'; --TESORERIA
 
 update m_cli_credito_aprobado
+set  m_cli_detalle_aprobacionid =2
+where NUMEROCREDITO IN ('2014-01-505','2014-01-506','2014-01-509','2014-01-510','2015-01-519','2015-01-521','2015-01-522',
+			'2015-02-523','2015-02-525','2015-02-528-','2016-02-532','2016-02-533','2016-02-534','2016-02-535',
+			'2016-02-536','2016-02-537','2016-02-538'); --FOMENTO
+
+update m_cli_credito_aprobado
 set  m_cli_detalle_aprobacionid =4
 where position ('FAC' in NUMEROCREDITO)>0;
 
