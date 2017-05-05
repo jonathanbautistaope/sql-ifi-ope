@@ -1581,6 +1581,21 @@ from
  (select m_cli_credito_aprobadoid,min(id)min_id from m_cli_detalle_liquidacion_cuota
 group by m_cli_credito_aprobadoid) mcdlc where (mcdlc.m_cli_credito_aprobadoid=mcdlc1.m_cli_credito_aprobadoid and mcdlc1.id>mcdlc.min_id)
 
+------------------------------------------------------------------------------------------------------------------------------
+Creditos que afectan la ultima cuota solo en interes pero que no tocan el capital, se les debe actualizar esa informacion
+------------------------------------------------------------------------------------------------------------------------------
+select 'update m_cli_detalle_liquidacion_cuota mcdlc set capitalperiodo='||valor_capital||',saldoactualcapital='||valor_capital||' from m_cli_credito_aprobado mcca where (mcca.id=mcdlc.m_cli_credito_aprobadoid and numerocredito='''||xpp.numero_credito||''' and numerocuota='||cuota||');'
+from xeo_plandepagos xpp
+inner join 
+(select numerocredito,numerocuota
+from m_cli_detalle_liquidacion_cuota mcdlc
+inner join m_cli_credito_aprobado mcca on (mcca.id=mcdlc.m_cli_credito_aprobadoid)
+where  capitalperiodo=0 and formadeextincion='Vigente' and numerocuota<>0) ccn
+	on (xpp.numero_credito=ccn.numerocredito
+		and cast(xpp.cuota as integer)=ccn.numerocuota 
+		and xpp.numero_credito not in ('2014-02-511*','2014-02-513','2015-01-524','2017-02-540')); --Estos creditos tienen periodos de gracia.
+		
+
 -------------------------------------------------------------------------
 ----m_cli_detalle_comprobante_credito	con detalle liquidacion cuota 					
 -------------------------------------------------------------------------
