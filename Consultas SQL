@@ -205,5 +205,39 @@ from xeo_plandepagos
 where numero_credito
 not in (select distinct numero_colocacion from xeo_historico where cuota is not null)
 
+--------------------------------------------------------------------------
+Creditos con desembolsos que se encuentran en mora
+--------------------------------------------------------------------------
+select  numero_credito,fecha_desembolso,modo_pago,fecha_desembolso+((case
+		when modo_pago='Mensual' then 1
+		when modo_pago='Bimestral' then 2
+		when modo_pago='Trimestral' then  3
+		when modo_pago='Cuatrimestral' then  4
+		when modo_pago='Pentamestral' then  5
+		when modo_pago='Semestral' then 6
+		when modo_pago='Septamestral' then 7
+		when modo_pago='Octamestral' then 8
+		when modo_pago='Nonamestral' then 9
+		when modo_pago='Decamestral' then 10
+		when modo_pago='Anual' then  12
+		end)*30),case when fecha_desembolso+((case
+		when modo_pago='Mensual' then 1
+		when modo_pago='Bimestral' then 2
+		when modo_pago='Trimestral' then  3
+		when modo_pago='Cuatrimestral' then  4
+		when modo_pago='Pentamestral' then  5
+		when modo_pago='Semestral' then 6
+		when modo_pago='Septamestral' then 7
+		when modo_pago='Octamestral' then 8
+		when modo_pago='Nonamestral' then 9
+		when modo_pago='Decamestral' then 10
+		when modo_pago='Anual' then  12
+		end)*30) <'2017-05-04' then 'mora' else 'no mora' end dias, MAX(fecha_vencimiento) fecha_venc
+from xeo_plandepagos
+where numero_credito
+not in (select distinct numero_colocacion from xeo_historico where cuota is not null)
+--and numero_credito='LIB-0002899'
+group by numero_credito,fecha_desembolso,modo_pago/*) xa*/
+order by 1
 
 
