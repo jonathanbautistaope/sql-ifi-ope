@@ -196,5 +196,14 @@ select numerocredito,formadeextincion,s_tercero.numero from m_cli_credito_aproba
 inner join m_cli_cliente on (mcca.m_cli_clienteid=m_cli_cliente.id)
 inner join s_tercero on (s_tercero.id=m_cli_cliente.s_terceroid )
 
+--------------------------------------------------------
+Los creditos que no tienen historico que se encuentran en el plan de pagos
+---------------------------------------------------------------------------
+
+select distinct numero_credito
+from xeo_plandepagos
+where numero_credito
+not in (select distinct numero_colocacion from xeo_historico where cuota is not null)
+
 
 
