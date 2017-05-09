@@ -40,7 +40,7 @@ Inicializar las secuencias
 		
 //******************************************
 //***************************************************
-'insert into xeo_plandepagos (numero_credito,cuota,ced_cliente,fecha_vencimiento,valor_cuota,valor_interes,valor_capital,valor_seguro,servicio_colocacion,valor_desembolso,numero_cuotas, pago_interes, punstos_spread, tasa_ea, tasa_periodo, plazo, modo_pago,fecha_desembolso,valor_saldo,fecha_fin_credito) values (',
+'insert into xeo_plandepagos (numero_credito,cuota,ced_cliente,fecha_vencimiento,valor_cuota,valor_interes,valor_capital,valor_seguro,servicio_colocacion,valor_desembolso,numero_cuotas, pago_interes, punstos_spread, tasa_ea, tasa_periodo, plazo, modo_pago,fecha_desembolso,valor_saldo,fecha_fin_credito,dias_gracia) values (',
 
 SELECT  trim(ccc.num_cre_cuo)  as credito,
         ccc.num_cuo,
@@ -75,7 +75,8 @@ SELECT  trim(ccc.num_cre_cuo)  as credito,
 	end)  AS MODO_PAGO, --PARA SABER LA PERIODICIDAD DEL PAGO
 
 	fec_desem AS FECHA_DESEMBOLSO,
-	fec_des_sal as fecha_fin_credito
+	fec_des_sal as fecha_fin_credito,
+	dia_gra_d_desem as dias_periodos_gracia
     --0 as valor_saldo,
     --null as fecha_fin_credito       
  FROM cf_cuotas_cre ccc
