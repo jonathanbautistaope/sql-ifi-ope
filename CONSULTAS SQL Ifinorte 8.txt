@@ -252,7 +252,7 @@ saldoanteriorcapital,capitalperiodo,saldoactualcapital,
 saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,interescorrienteperiodo,saldoactualcorriente,
 saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,saldoactualmoratorios,cuotaseguro,
 saldoactualseguro,saldonuevocredito,creacion,saldoanteriorseguro,abonocapital,abonocorriente,abonomoratorios,
-abonoseguro)
+abonoseguro,)
 SELECT --Solo las cuotas que tienen movimiento en el historico
 	mclc.id , --m_cli_liquidacion_cuotaid
 	mcca.id , --m_cli_credito_aprobadoid
@@ -523,17 +523,14 @@ inner join
 	) mcca
 		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
 
-where mcca.numerocredito IN (
-'CAR-070','CAR-080','CAR-081','CAR-082','CAR-083','CAR-084','CAR-085','CAR-086','CAR-087','CAR-088','CAR-089','CAR-090',
-'CAR-091','CAR-092','CAR-093','CAR-094','CAR-095','CAR-096','CAR-097','CAR-098','CAR-099','CAR-100','CAR-101','CAR-102',
-'CAR-103','CAR-104','CAR-105.','CAR-106','CAR-107','CAR-108','CAR-109','CAR-110','CAR-111','CAR-112','CAR-113','CAR-114',
-'CAR-115','CAR-116','CAR-117','CAR-118','CAR-119','CAR-120','CAR-121','CAR-122','CAR-123','CAR-124','CAR-125','CAR-126.',
-'CAR-127.','CAR-128','CAR-129','CAR-130.','CAR-131','CAR-132','CAR-133','CAR-134','CAR-135','CAR-136-','CAR-137*',
-'CAR-138','CAR-139','CAR-140','CAR-141','CAR-142','CAR-143','CAR-144*','CAR-145','CAR-146','CAR-147','CAR-148','CAR-149',
-'CAR-150','CAR-151','CAR-152','CAR-153','CAR-154','CAR-155','CAR-156','CAR-157','CAR-158','CAR-159','CAR-160','CAR-161*',
-'CAR-162','CAR-163','CAR-164','CAR-165***','CAR-166','CAR-167','CAR-168','CAR-169','CAR-170','CAR-171*','CAR-172','CAR-173',
-'CAR-174*','CAR-175','CAR-176','CAR-177','CAR-178','CAR-179-','CAR-181','CAR-182','CAR-183','CAR-185','CAR-186','CAR-187',
-'CAR-188*','CAR-189','CAR-191','FAC-101','FAC-102','FAC-103','FAC-104','FAC-105','FAC-106*','FAC-107','FAC-108','FAC-109')
+where mcca.numerocredito IN SELECT NUMERO_COLOCACION, SUM(VALOR_TRANSACCION) 
+							FROM XEO_HISTORICO
+							WHERE NUMERO_COLOCACION IN (SELECT NUMERO_CREDITO 
+														FROM XEO_PLANDEPAGOS
+														WHERE CUOTA='0') 
+							AND CUOTA IS NOT NULL
+							GROUP BY NUMERO_COLOCACION
+							)
 AND CAST(COALESCE(xpp.cuota,'0') AS INTEGER)=0
 
 //LOS ANTERIORES CREDITOS TIENEN EN EL PLAN DE PAGOS UN PAGO QUE ES EL PAGO 0 EN EL CUAL SE DESCUENTA EL VALOR DE LOS INTERESES.
@@ -888,17 +885,14 @@ inner join
 	) mcca
 		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
 
-where mcca.numerocredito IN (
-'CAR-070','CAR-080','CAR-081','CAR-082','CAR-083','CAR-084','CAR-085','CAR-086','CAR-087','CAR-088','CAR-089','CAR-090',
-'CAR-091','CAR-092','CAR-093','CAR-094','CAR-095','CAR-096','CAR-097','CAR-098','CAR-099','CAR-100','CAR-101','CAR-102',
-'CAR-103','CAR-104','CAR-105.','CAR-106','CAR-107','CAR-108','CAR-109','CAR-110','CAR-111','CAR-112','CAR-113','CAR-114',
-'CAR-115','CAR-116','CAR-117','CAR-118','CAR-119','CAR-120','CAR-121','CAR-122','CAR-123','CAR-124','CAR-125','CAR-126.',
-'CAR-127.','CAR-128','CAR-129','CAR-130.','CAR-131','CAR-132','CAR-133','CAR-134','CAR-135','CAR-136-','CAR-137*',
-'CAR-138','CAR-139','CAR-140','CAR-141','CAR-142','CAR-143','CAR-144*','CAR-145','CAR-146','CAR-147','CAR-148','CAR-149',
-'CAR-150','CAR-151','CAR-152','CAR-153','CAR-154','CAR-155','CAR-156','CAR-157','CAR-158','CAR-159','CAR-160','CAR-161*',
-'CAR-162','CAR-163','CAR-164','CAR-165***','CAR-166','CAR-167','CAR-168','CAR-169','CAR-170','CAR-171*','CAR-172','CAR-173',
-'CAR-174*','CAR-175','CAR-176','CAR-177','CAR-178','CAR-179-','CAR-181','CAR-182','CAR-183','CAR-185','CAR-186','CAR-187',
-'CAR-188*','CAR-189','CAR-191','CAR-192','CAR-193','CAR-194','CAR-196','FAC-101','FAC-102','FAC-103','FAC-104','FAC-105','FAC-106*','FAC-107','FAC-108','FAC-109')
+where mcca.numerocredito IN SELECT NUMERO_COLOCACION, SUM(VALOR_TRANSACCION) 
+							FROM XEO_HISTORICO
+							WHERE NUMERO_COLOCACION IN (SELECT NUMERO_CREDITO 
+														FROM XEO_PLANDEPAGOS
+														WHERE CUOTA='0') 
+							AND CUOTA IS NOT NULL
+							GROUP BY NUMERO_COLOCACION
+							)
 AND CAST(COALESCE(xpp.cuota,'0') AS INTEGER)=0
 
 //***************************************************************************************************************************
