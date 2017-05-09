@@ -252,7 +252,7 @@ saldoanteriorcapital,capitalperiodo,saldoactualcapital,
 saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,interescorrienteperiodo,saldoactualcorriente,
 saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,saldoactualmoratorios,cuotaseguro,
 saldoactualseguro,saldonuevocredito,creacion,saldoanteriorseguro,abonocapital,abonocorriente,abonomoratorios,
-abonoseguro,)
+abonoseguro)
 SELECT --Solo las cuotas que tienen movimiento en el historico
 	mclc.id , --m_cli_liquidacion_cuotaid
 	mcca.id , --m_cli_credito_aprobadoid
@@ -523,14 +523,16 @@ inner join
 	) mcca
 		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
 
-where mcca.numerocredito IN SELECT NUMERO_COLOCACION, SUM(VALOR_TRANSACCION) 
+where mcca.numerocredito IN (select numero_colocacion 
+				from(SELECT NUMERO_COLOCACION, SUM(VALOR_TRANSACCION) 
 							FROM XEO_HISTORICO
 							WHERE NUMERO_COLOCACION IN (SELECT NUMERO_CREDITO 
 														FROM XEO_PLANDEPAGOS
 														WHERE CUOTA='0') 
 							AND CUOTA IS NOT NULL
 							GROUP BY NUMERO_COLOCACION
-							)
+							)a
+				)
 AND CAST(COALESCE(xpp.cuota,'0') AS INTEGER)=0
 
 //LOS ANTERIORES CREDITOS TIENEN EN EL PLAN DE PAGOS UN PAGO QUE ES EL PAGO 0 EN EL CUAL SE DESCUENTA EL VALOR DE LOS INTERESES.
@@ -885,14 +887,16 @@ inner join
 	) mcca
 		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
 
-where mcca.numerocredito IN SELECT NUMERO_COLOCACION, SUM(VALOR_TRANSACCION) 
+where mcca.numerocredito IN  (select numero_colocacion 
+				from(SELECT NUMERO_COLOCACION, SUM(VALOR_TRANSACCION) 
 							FROM XEO_HISTORICO
 							WHERE NUMERO_COLOCACION IN (SELECT NUMERO_CREDITO 
 														FROM XEO_PLANDEPAGOS
 														WHERE CUOTA='0') 
 							AND CUOTA IS NOT NULL
 							GROUP BY NUMERO_COLOCACION
-							)
+							)a
+				)
 AND CAST(COALESCE(xpp.cuota,'0') AS INTEGER)=0
 
 //***************************************************************************************************************************
