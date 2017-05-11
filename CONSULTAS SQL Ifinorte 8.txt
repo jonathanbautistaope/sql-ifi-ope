@@ -1660,11 +1660,7 @@ Tablas conceptos
 	case when deuda>0 then 'insert into m_cli_detalle_concepto (m_cli_detalle_comprobante_creditoid,m_cli_concepto_creditoid,valor,creacion) values ('||mcdcc.id||',1,'||deuda||',"2017-01-01");' end,
 	case when mora>0 then 'insert into m_cli_detalle_concepto (m_cli_detalle_comprobante_creditoid,m_cli_concepto_creditoid,valor,creacion) values ('||mcdcc.id||',3,'||mora||',"2017-01-01");'end
 from 
-(select mcdcc1.id,fecha , trim(substring(mccc.descripcion from position ('Num.Credito:' in mccc.descripcion)+12 for char_length(mccc.descripcion))) numerocredito
-from 
-(select mcdcc1.id,fecha ,numerocuota, 
-	trim(substring(mccc.descripcion from position 
-		('Num.Credito:' in mccc.descripcion)+12 for char_length(mccc.descripcion))) numerocredito
+(select mcdcc1.id,fecha , numerocuota, trim(substring(mccc.descripcion from position ('Num.Credito:' in mccc.descripcion)+12 for char_length(mccc.descripcion))) numerocredito
 from m_cli_detalle_comprobante_credito mcdcc1
 inner join m_cli_comprobante_credito mccc on (mccc.id=mcdcc1.m_cli_comprobante_creditoid)
 inner join m_cli_detalle_liquidacion_cuota mcdlc on (mcdcc1.m_cli_detalle_liquidacion_cuotaid=mcdlc.id)) mcdcc
