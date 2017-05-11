@@ -1661,9 +1661,14 @@ Tablas conceptos
 	case when mora>0 then 'insert into m_cli_detalle_concepto (m_cli_detalle_comprobante_creditoid,m_cli_concepto_creditoid,valor,creacion) values ('||mcdcc.id||',3,'||mora||',"2017-01-01");'end
 from 
 (select mcdcc1.id,fecha , trim(substring(mccc.descripcion from position ('Num.Credito:' in mccc.descripcion)+12 for char_length(mccc.descripcion))) numerocredito
+from 
+(select mcdcc1.id,fecha ,numerocuota, 
+	trim(substring(mccc.descripcion from position 
+		('Num.Credito:' in mccc.descripcion)+12 for char_length(mccc.descripcion))) numerocredito
 from m_cli_detalle_comprobante_credito mcdcc1
-inner join m_cli_comprobante_credito mccc on (mccc.id=mcdcc1.m_cli_comprobante_creditoid)) mcdcc
-inner join (select numero_colocacion,fecha_movimiento,
+inner join m_cli_comprobante_credito mccc on (mccc.id=mcdcc1.m_cli_comprobante_creditoid)
+inner join m_cli_detalle_liquidacion_cuota mcdlc on (mcdcc1.m_cli_detalle_liquidacion_cuotaid=mcdlc.id)) mcdcc
+inner join (select numero_colocacion,fecha_movimiento,cuota,
 		SUM(case
 		when POSITION( 'Int. Causado' IN transaccion)>0
 			then coalesce(VALOR_TRANSACCION,0) end)interes_causado,
@@ -1689,8 +1694,10 @@ inner join (select numero_colocacion,fecha_movimiento,
 		when POSITION( 'Mora' IN transaccion)>0  
 			then coalesce(valor_transaccion,0) end ) mora
 		from xeo_historico 
-		where cuota is not null --and xeoh.numero_colocacion='LIB-0002001'
-		group by 1,2) xh on (xh.numero_colocacion=mcdcc.numerocredito and xh.fecha_movimiento=mcdcc.fecha)
+		where cuota is not null --and numero_colocacion='2014-02-508'
+		group by 1,2,3) xh on (xh.numero_colocacion=mcdcc.numerocredito 
+					and xh.fecha_movimiento=mcdcc.fecha 
+					and cast(xh.cuota as integer)=mcdcc.numerocuota)
 		
 		
 --------------
