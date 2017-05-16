@@ -32,76 +32,6 @@ Inicializar las secuencias
 
 --SELECT * FROM cf_cuotas_cre WHERE num_cre_cuo='LIB-0001516'--registros del plan de pagos
 
-
-//******************************
-//**********************************
-		
-		Select para PLAN DE PAGOS 
-		
-//******************************************
-//***************************************************
-'insert into xeo_plandepagos (numero_credito,cuota,ced_cliente,fecha_vencimiento,valor_cuota,valor_interes,valor_capital,valor_seguro,servicio_colocacion,valor_desembolso,numero_cuotas, pago_interes, punstos_spread, tasa_ea, tasa_periodo, plazo, modo_pago,fecha_desembolso,valor_saldo,fecha_fin_credito,dias_gracia) values (',
-
-SELECT  trim(ccc.num_cre_cuo)  as credito,
-        ccc.num_cuo,
-        ccd.cliente_desem,
-        ccc.f_vence_cuo,
-        coalesce(ccc.car_cap + ccc.car_int,0)  as valor_cuota,
-        coalesce(ccc.car_int,0) as valor_interes,
-        coalesce(ccc.car_cap,0) as valor_capital,
-        coalesce(cac.cc_cargo,0) as VALOR_SEGURO,
-        ccd.linea_desem AS SERVICIO_COLOCACION,
-        ccd.valor_desem AS VALOR_DESEMBOLSO,
-        ccd.cuo_ord_liq_desem AS NUMERO_CUOTAS, 
-        ccd.per_pag_i_desem AS PAGO_INTERES, 
-        cast (ccd.pun_adi_tas_desem as numeric(15,3)) as PUNTOS_SPREAD,
-        coalesce (cast( (power( 1 + (ccd.tas_per_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) )-1 ) * 100 as numeric(15,4)) ,0) AS TASA_EA,//SE DEBE COMPARAR ESTE VALOR CON EL DE PLAN DE PAGOS PGADMIN --por_tasa_desem AS TASA,--TAS_PER_DESEM
-        coalesce(CAST( (power (cast(1 + (cast( (power( 1 + (ccd.tas_per_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,12)) as numeric (15,12)) )-1 ) * 100 as numeric(15,12)))/100 as numeric(15,12)) ,cast(1/cast(12/(cast(ccd.per_pag_k_desem/30 as numeric(15,12)) )as numeric(15,12)) as numeric(15,12)) ) -1) * 12 * 100 AS numeric(15,3)),0) as TASA_PERIODO,
-        cast (plazo_desem/30 as integer) AS PLAZO, --PASAR A MESES SE ENCUENTRA EN DIAS
-	(case 
-		per_pag_k_desem/30
-	when 1 then 'Mensual' 
-	when 2 then 'Bimestral'
-	when 3 then 'Trimestral'
-	when 4 then 'Cuatrimestral'
-	when 5 then 'Pentamestral'
-	when 6 then 'Semestral'
-	when 7 then 'Septamestral'
-	when 8 then 'Octamestral'
-	when 9 then 'Nonamestral'
-    when 10 then 'Decamestral'
-    when 11 then 'Oncemestral'
-    when 12 then 'Anual'
-	end)  AS MODO_PAGO, --PARA SABER LA PERIODICIDAD DEL PAGO
-
-	fec_desem AS FECHA_DESEMBOLSO,
-	fec_des_sal as fecha_fin_credito,
-	dia_gra_d_desem as dias_periodos_gracia
-    --0 as valor_saldo,
-    --null as fecha_fin_credito       
- FROM cf_cuotas_cre ccc
-INNER JOIN cf_desem_sal cds ON (cds.num_des_sal=ccc.num_cre_cuo and 
-                                ccc.lin_cuo=cds.lin_des_sal and 
-                                ccc.suc_cuo=cds.suc_des_sal and 
-                                cds.tip_des_sal=ccc.tip_car_cuo)
-INNER JOIN cf_cue_desem ccd ON (ccd.num_desem=ccc.num_cre_cuo and 
-                                ccd.linea_desem=ccc.lin_cuo and 
-                                ccd.suc_desem=ccc.suc_cuo AND 
-                                ccd.tipo_desem=ccc.tip_car_cuo)
-left JOIN (SELECT suc_cc,tip_cc,lin_cc,num_cc,cuota_cc,cam_cc,sum(cargo_cc) as cc_cargo
-            fROM cf_aux_cargcuo cac1
-            inner join cf_desem_sal cds1 on (cds1.fec_des_sal=cac1.cam_cc and cac1.num_cc=cds1.num_des_sal and cac1.lin_cc=cds1.lin_des_sal and 
-                                             cac1.suc_cc=cds1.suc_des_sal and cac1.tip_cc=cds1.tip_des_sal)
-            group by suc_cc,tip_cc,lin_cc,num_cc,cuota_cc,cam_cc) cac ON (cac.num_cc=ccc.num_cre_cuo AND 
-                                                                    cac.lin_cc=ccc.lin_cuo AND 
-                                                                    cac.suc_cc=ccc.suc_cuo and
-                                                                    cac.tip_cc=ccc.tip_car_cuo AND 
-                                                                    cac.cuota_cc=ccc.num_cuo)
---where trim(ccd.num_desem)=('LIB-0001464')
---LIB-0002118
---LIB-0002312
-
-
 //******************************
 //**********************************
 		
@@ -115,7 +45,7 @@ SELECT  'insert into xeo_plandepagos (numero_credito,cuota,ced_cliente,fecha_ven
         coalesce(ccc.car_int,0)||','||coalesce(ccc.car_cap,0)||','||coalesce(cac.cc_cargo,0)||',"'||ccd.linea_desem||'",'||ccd.valor_desem||',"'||
         ccd.cuo_ord_liq_desem||'","'||ccd.per_pag_i_desem||'","'||cast (ccd.pun_adi_tas_desem as numeric(15,3))||'",'||
         coalesce (cast( (power( 1 + (ccd.tas_per_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) )-1 ) * 100 as numeric(15,4)) ,0) ||','||
-        coalesce (ccd.tas_per_desem,0)||','||
+        cast (coalesce (ccd.tas_per_desem,0)/(12/(per_pag_k_desem/30))  as numeric (15,4))||','||
         cast (plazo_desem/30 as integer)||',"'||
 	(case 
 		per_pag_k_desem/30
