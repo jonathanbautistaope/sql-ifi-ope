@@ -1,0 +1,77 @@
+delete from xeo_historico;
+delete from xeo_plandepagos;
+
+SELECT  'insert into xeo_plandepagos (numero_credito,cuota,ced_cliente,fecha_vencimiento,valor_cuota,valor_interes,valor_capital,valor_seguro,servicio_colocacion,valor_desembolso,numero_cuotas, pago_interes, puntos_spread, tasa_ea, tasa_periodo, plazo, modo_pago,fecha_desembolso,valor_saldo,fecha_fin_credito) values ('||
+		'"'||trim(ccc.num_cre_cuo)||'","'||ccc.num_cuo||'",'||ccd.cliente_desem||',"'||ccc.f_vence_cuo||'",'||coalesce(ccc.car_cap + ccc.car_int,0)||','||
+        coalesce(ccc.car_int,0)||','||coalesce(ccc.car_cap,0)||','||coalesce(cac.cc_cargo,0)||',"'||ccd.linea_desem||'",'||ccd.valor_desem||',"'||
+        ccd.cuo_ord_liq_desem||'","'||ccd.per_pag_i_desem||'","'||cast (ccd.pun_adi_tas_desem as numeric(15,3))||'",'||
+        coalesce (cast( (power( 1 + (ccd.tas_per_desem/100)/cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) ,cast(12/cast(ccd.per_pag_k_desem/30 as numeric (15,4)) as numeric (15,4)) )-1 ) * 100 as numeric(15,4)) ,0) ||','||
+        cast (coalesce (ccd.tas_per_desem,0)/(12/(per_pag_k_desem/30))  as numeric (15,4))||','||
+        cast (plazo_desem/30 as integer)||',"'||
+	(case 
+		per_pag_k_desem/30
+	when 1 then 'Mensual' 
+	when 2 then 'Bimestral'
+	when 3 then 'Trimestral'
+	when 4 then 'Cuatrimestral'
+	when 5 then 'Pentamestral'
+	when 6 then 'Semestral'
+	when 7 then 'Septamestral'
+	when 8 then 'Octamestral'
+	when 9 then 'Nonamestral'
+    when 10 then 'Decamestral'
+    when 11 then 'Oncemestral'
+    when 12 then 'Anual'
+	end) ||'","'||fec_desem||'",0,"'||fec_des_sal||'");' as inserts
+       
+ FROM cf_cuotas_cre ccc
+INNER JOIN cf_desem_sal cds ON (cds.num_des_sal=ccc.num_cre_cuo and 
+                                ccc.lin_cuo=cds.lin_des_sal and 
+                                ccc.suc_cuo=cds.suc_des_sal and 
+                                cds.tip_des_sal=ccc.tip_car_cuo)
+INNER JOIN cf_cue_desem ccd ON (ccd.num_desem=ccc.num_cre_cuo and 
+                                ccd.linea_desem=ccc.lin_cuo and 
+                                ccd.suc_desem=ccc.suc_cuo AND 
+                                ccd.tipo_desem=ccc.tip_car_cuo)
+left JOIN (SELECT suc_cc,tip_cc,lin_cc,num_cc,cuota_cc,cam_cc,sum(cargo_cc) as cc_cargo
+            fROM cf_aux_cargcuo cac1
+            inner join cf_desem_sal cds1 on (cds1.fec_des_sal=cac1.cam_cc and cac1.num_cc=cds1.num_des_sal and cac1.lin_cc=cds1.lin_des_sal and 
+                                             cac1.suc_cc=cds1.suc_des_sal and cac1.tip_cc=cds1.tip_des_sal)
+            group by suc_cc,tip_cc,lin_cc,num_cc,cuota_cc,cam_cc) cac ON (cac.num_cc=ccc.num_cre_cuo AND 
+                                                                    cac.lin_cc=ccc.lin_cuo AND 
+                                                                    cac.suc_cc=ccc.suc_cuo and
+                                                                    cac.tip_cc=ccc.tip_car_cuo AND 
+                                                                    cac.cuota_cc=ccc.num_cuo);
+
+
+//***************************
+insert HISTORICO
+//**************************
+
+------detalle son todos los movimientos que han tenido todos los creditos.
+
+select  'insert into xeo_historico (numero_colocacion,ced_cliente,sucursal,tipo_doc,fecha_movimiento, cuota,transaccion,dd,fecha_desde,fecha_hasta,valor_transaccion,tip_reliq,base) values ("'||pagare_m||'",'||cliente_m||',"'||sucur_m||'","'||tip_cre_m||'","'||fecha_m||'","'||cuota_m||'","'||tip_tra_m ||'","'||coalesce(dias,0) ||'","'
+||fi_pag_mor||'","'||ff_pag_mor||'",'||valor_m||',"'||coalesce(tip_reliq,' ')||'",'||base||');'
+from CF_MOVIMIENTOS 
+--where PAGARE_M='LIB-0002001'
+where pagare_m is not null 
+
+//------encabezado solo debe tener si el credito esta o no vigente
+
+SELECT 'insert into xeo_historico (ced_cliente,numero_colocacion,transaccion,fecha_desembolso,valor_desembolso,sucursal,tipo_doc) values ('||cliente_desem||',"'||num_desem||'","'||transaccion||'","'||fec_desem||'",'||valor_desem||',"111","credito");'
+from 
+(select 
+ distinct 
+    cliente_desem,
+    num_desem, 
+    case est_vh_desem 
+    when 'V' then 'VIGENTE'
+    when 'C' then 'CANCELADO'
+    END as transaccion,
+    fec_desem,
+    valor_desem 
+ from cf_cue_desem where  est_vh_desem NOT IN ('A','P','R') AND NUM_DESEM NOT IN ('LIB-0002118','LIB-0002312') 
+ /*los creditos incluidos en el not in no fueron realizados, tienen registro pero no tienen nada.*/
+)a
+
+
