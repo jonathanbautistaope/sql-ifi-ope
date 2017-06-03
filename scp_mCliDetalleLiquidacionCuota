@@ -1,0 +1,366 @@
+llenar_temporal_cre_nov();
+
+$vsql ="delete from m_cli_detalle_liquidacion_cuota ";
+sc_exec_sql($vsql);
+
+$fecha_creacion = date("Y-m-d");
+
+$vsql ="
+insert into m_cli_detalle_liquidacion_cuota (m_cli_liquidacion_cuotaid,m_cli_credito_aprobadoid,
+numerocuota,inicioliquidacion,
+finliquidacion,fechapago,
+saldoanteriorcredito,valorcuota,
+saldoanteriorcapital,capitalperiodo,saldoactualcapital,
+saldoanteriorcorrientes,diasinterescorriente,porcentajecorriente,interescorrienteperiodo,saldoactualcorriente,
+saldoanteriormoratorios,diasmora,interesmoratorioperiodo,porcentajemora,saldoactualmoratorios,cuotaseguro,
+saldoactualseguro,saldonuevocredito,creacion,saldoanteriorseguro,abonocapital,abonocorriente,abonomoratorios,
+abonoseguro,interesgenerado,abonointeresgenerado,saldointeresgenerado)
+SELECT mclc.id,--m_cli_liquidacion_cuotaid
+	mcca.id ,--m_cli_credito_aprobadoid
+	cast (xpp.cuota as integer) ,--numerocuota
+	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'),'yyyy-mm-dd'),--inicioliquidacion
+	xpp.fecha_vencimiento,--finliquidacion
+	xpp.fecha_vencimiento,--to_date(To_char(date_trunc('month',xpp.fecha_vencimiento )  
+							--+'1month' ::interval -'1sec' ::interval, 'yyyy-mm-dd'),'yyyy-mm-dd'),--fechapago
+	0 ,--saldoanteriorcredito
+	coalesce(xpp.valor_capital,0)+coalesce(xpp.valor_interes,0),--valorcuota
+	0 ,--saldoanteriorcapital
+	coalesce(xh.deuda,0),--capitalperiodo
+	0,--saldoactualcapital
+	0,--saldoanteriorcorrientes
+	cast(xpp.pago_interes as integer),--diasinterescorriente
+	coalesce(xpp.tasa_periodo,0) ,--porcentajecorriente
+	coalesce(xpp.valor_interes,0) ,--interescorrienteperiodo
+	0 ,--saldoactualcorriente 
+	0 ,--Saldo anterior moratorio , tabla diana
+	coalesce(xh.dd_mora,0) ,--dias mora, tabla diana
+	coalesce(xh.mora,0),--interesmoratorioperiodo
+	0 ,--porcentajemora
+	0 ,--saldoactualmoratorios
+	coalesce(xh.seguro,0)  ,--cuotaseguro
+	0 ,--saldoactualseguro
+	0 , --saldonuevocredito
+	 to_date('".$fecha_creacion."','yyyy-mm-dd'),--creacion
+	0 ,--saldoanteriorseguro
+	coalesce(xh.deuda,0) ,--abonocapital
+	CASE WHEN XH.INTERES_CORRIENTE>XPP.VALOR_INTERES 
+		THEN coalesce(XPP.VALOR_INTERES,0) 
+		ELSE COALESCE(XH.INTERES_CORRIENTE,0) END  ,--abonocorriente
+	coalesce(xh.mora,0) ,--abonomoratorios
+	coalesce(xh.seguro,0), --abonoseguro
+	coalesce (xh.interes_corriente,0), --interesgenerado
+	coalesce (xh.interes_corriente,0), -- abonointeresgenerado
+	coalesce (0) --saldointeresgenerado
+from 	
+	xeo_plandepagos xpp
+inner join 
+	(
+		select ced_cliente,numero_colocacion,cuota,--valor_desembolso,
+		SUM(case
+		when POSITION( 'Int.' IN transaccion)>0
+			then coalesce(VALOR_TRANSACCION,0) end)  interes_corriente,
+		sum(case
+		when POSITION( 'Seguro' IN transaccion)>0 
+			then coalesce(valor_transaccion,0) end ) seguro,
+		sum(case
+		when POSITION( 'Deuda' IN transaccion)>0  
+			then coalesce(valor_transaccion,0) end ) deuda,
+		sum(case
+		when POSITION( 'Mora' IN transaccion)>0  
+			then coalesce(valor_transaccion,0) end ) mora,
+		sum(case
+		when POSITION( 'Mora' IN transaccion)>0  
+			then cast(dd as integer) end ) dd_mora,
+		sum(coalesce(saldo_capital,0))
+		from xeo_historico
+		where cuota is not null
+		group by 1,2,3--,4
+	) xh
+		on (xh.numero_colocacion = xpp.numero_credito and CAST(COALESCE(xh.cuota,'0')AS INTEGER) = CAST(COALESCE(xpp.cuota,'0') AS INTEGER) )
+inner join 
+	(select 
+	substring(descripcion from position ('Num.Credito:' in descripcion)+12 for char_length(descripcion)) as credito,id
+	from m_cli_liquidacion_cuota) mclc
+		on (trim(xpp.numero_credito) = trim(mclc.credito))
+inner join 
+	(select id,numerocredito,
+		(case
+		when modalidadpago='Mensual' then 1
+		when modalidadpago='Bimestral' then 2
+		when modalidadpago='Trimestral' then  3
+		when modalidadpago='Cuatrimestral' then  4
+		when modalidadpago='Pentamestral' then  5
+		when modalidadpago='Semestral' then 6
+		when modalidadpago='Septamestral' then 7
+		when modalidadpago='Octamestral' then 8
+		when modalidadpago='Nonamestral' then 9
+		when modalidadpago='Decamestral' then 10
+		when modalidadpago='Anual' then  12
+		end) mesespago
+		from m_cli_credito_aprobado
+		--where upper(formadeextincion) like '%VIGENTE%'
+	) mcca
+		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
+union
+SELECT --Las cuotas que no tienen movimiento en el historico
+	mclc.id, 	--mclc.id
+	mcca.id ,		--mca.id
+	cast (xpp.cuota as integer) ,		--numerocuota
+	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'),'yyyy-mm-dd'),	--inicioliquidacion
+	xpp.fecha_vencimiento,		--finliquidacion
+	xpp.fecha_vencimiento,--to_date(To_char(date_trunc('month',
+						--xpp.fecha_vencimiento )  +'1month' 
+						--::interval -'1sec' ::interval, 'yyyy-mm-dd'),
+						--'yyyy-mm-dd'),	--fechapago
+	0 ,		--saldoanteriorcredito
+	coalesce(xpp.valor_capital,0)+coalesce(xpp.valor_interes,0) ,	--valorcuota
+	0 ,	--saldoanteriorcapital
+	coalesce(xpp.valor_capital,0) ,	--capitalperiodo
+	coalesce(xpp.valor_capital,0) ,	--saldoactualcapital
+	0 ,	--saldoanteriorcorrientes
+	cast(xpp.pago_interes as integer),--diasinterescorriente
+	coalesce(xpp.tasa_periodo,0)  ,	--porcentajecorriente
+	coalesce(xpp.valor_interes,0) ,	--interescorrienteperiodo
+	0 , 			--saldoactualcorriente
+	0 ,--saldoanteriormoratorios
+	0 ,--dias mora, tabla diana
+	0 ,--interesmoratorioperiodo
+	0 ,--porcentajemora
+	0 ,--saldoactualmoratorios
+	coalesce(valor_seguro,0),--cuotaseguro
+	0 ,						--saldoactualseguro
+	0 ,--saldonuevocredito
+	to_date('".$fecha_creacion."','yyyy-mm-dd'),--creacion
+	0 ,								--saldoanteriorseguro
+	0 ,--abonocapital
+	0 ,--abonocorriente
+	0 ,--abonomoratorios
+	0, --abonoseguro
+	0 , --interesgenerado
+	0 , -- abonointeresgenerado
+	0  --saldointeresgenerado
+from
+	xeo_plandepagos xpp
+inner join 
+	(
+		select numero_colocacion,max (CAST(cuota AS INTEGER)) cuota
+		from xeo_historico
+		where cuota is not null
+		group by numero_colocacion		
+	) xh
+		on (xh.numero_colocacion = xpp.numero_credito and CAST(xpp.cuota AS INTEGER)>CAST(xh.cuota AS INTEGER) )
+inner join 
+	(select 
+	substring(descripcion from position ('Num.Credito:' in descripcion)+12 for char_length(descripcion)) as credito,id
+	from m_cli_liquidacion_cuota) mclc
+		on (trim(xpp.numero_credito) = trim(mclc.credito))
+inner join 
+	(select id,numerocredito,
+		(case
+		when modalidadpago='Mensual' then 1
+		when modalidadpago='Bimestral' then 2
+		when modalidadpago='Trimestral' then  3
+		when modalidadpago='Cuatrimestral' then  4
+		when modalidadpago='Pentamestral' then  5
+		when modalidadpago='Semestral' then 6
+		when modalidadpago='Septamestral' then 7
+		when modalidadpago='Octamestral' then 8
+		when modalidadpago='Nonamestral' then 9
+		when modalidadpago='Decamestral' then 10
+		when modalidadpago='Anual' then  12
+		end) mesespago
+		from m_cli_credito_aprobado
+		--where upper(formadeextincion) like '%VIGENTE%'
+	) mcca
+		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
+UNION
+SELECT  --para aquellos creditos que solo tienen una cuota a pagar
+	mclc.id,
+	mcca.id ,
+	cast(xpp.cuota as integer) ,
+	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'),'yyyy-mm-dd'),
+	xpp.fecha_vencimiento,
+	xpp.fecha_vencimiento,--to_date(To_char(date_trunc('month',
+							--xpp.fecha_vencimiento )  +'1month' 
+							--::interval -'1sec' ::interval, 'yyyy-mm-dd'),
+							--'yyyy-mm-dd'),
+	0,--saldoanteriorcredito
+	coalesce(xpp.valor_capital,0) + coalesce(xpp.valor_interes,0) ,--valorcuota
+	0 ,--saldoanteriorcapital
+	coalesce(xpp.valor_capital,0) , --capitalperiodo
+	coalesce(xpp.valor_capital,0) , --saldoactualcapital
+	0 ,--saldoanteriorcorrientes
+	cast(xpp.pago_interes as integer)      ,--diasinterescorriente
+	coalesce(xpp.tasa_periodo,0)  ,--porcentajecorriente
+	coalesce(xpp.valor_interes,0) ,--interescorrienteperiodo
+	0 ,--saldoactualcorriente
+	0 ,--Saldo anterior moratorio , tabla diana
+	0 ,--diasmora
+	0 ,--interesmoratorioperiodo
+	0 ,--porcentajemora
+	0 ,--saldoactualmoratorios
+	coalesce(valor_seguro,0)    ,--cuotaseguro
+	0,--saldoactualseguro
+	0 ,--saldonuevocredito
+	to_date('".$fecha_creacion."','yyyy-mm-dd'), --creacion
+	0 , -- saldoanteriorseguro
+	0 , --abonocapital
+	0 , --abonocorriente
+	0 , --abonomoratorios
+	0 ,--abonoseguro
+	0 , --interesgenerado
+	0 , -- abonointeresgenerado
+	0  --saldointeresgenerado
+from
+	xeo_plandepagos xpp
+inner join 
+	(
+	SELECT NUMERO_COLOCACION,COUNT(COALESCE(CUOTA,'0'))
+		FROM XEO_HISTORICO
+		--WHERE numero_colocacion not in ('LIB-0002395','LIB-0002463','LIB-0002465','LIB-0002470','LIB-0002763')
+		GROUP BY NUMERO_COLOCACION
+		HAVING COUNT(COALESCE(CUOTA,'0'))=1	
+	) xh
+		on (xh.numero_colocacion = xpp.numero_credito )
+inner join 
+	(select 
+	substring(descripcion from position ('Num.Credito:' in descripcion)+12 for char_length(descripcion)) as credito,id
+	from m_cli_liquidacion_cuota) mclc
+		on (trim(xpp.numero_credito) = trim(mclc.credito))
+inner join 
+	(select id,numerocredito,
+		(case
+		when modalidadpago='Mensual' then 1
+		when modalidadpago='Bimestral' then 2
+		when modalidadpago='Trimestral' then  3
+		when modalidadpago='Cuatrimestral' then  4
+		when modalidadpago='Pentamestral' then  5
+		when modalidadpago='Semestral' then 6
+		when modalidadpago='Septamestral' then 7
+		when modalidadpago='Octamestral' then 8
+		when modalidadpago='Nonamestral' then 9
+		when modalidadpago='Decamestral' then 10
+		when modalidadpago='Anual' then  12
+		end) mesespago
+		from m_cli_credito_aprobado
+		--where upper(formadeextincion) like '%VIGENTE%'
+	) mcca
+		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
+UNION
+SELECT --Solo los creditos que tienen cuota cero y que ya tienen un movimiento en historico; los que son nuevos se crean en otro select
+	--adicionalmente el saldo del interes es cero por que se le descuenta total del credito.
+	mclc.id,--m_cli_liquidacion_cuotaid
+	mcca.id ,--m_cli_credito_aprobadoid
+	cast(xpp.cuota as integer) ,--numerocuota
+	to_date(To_char(xpp.fecha_vencimiento  -(to_char(mcca.mesespago,'99')||'month') ::interval , 'yyyy-mm-dd'),'yyyy-mm-dd'),--inicioliquidacion
+	xpp.fecha_vencimiento, --finliquidacion
+	xpp.fecha_vencimiento, --to_date(To_char(date_trunc('month',
+							--xpp.fecha_vencimiento )  +'1month' 
+							--::interval -'1sec' ::interval, 'yyyy-mm-dd'),
+							--'yyyy-mm-dd') , --fechapago
+	0 , --saldoanteriorcredito
+	coalesce(xpp.valor_capital,0)+coalesce(xpp.valor_interes,0) , --valorcuota
+	0 , --saldoanteriorcapital
+	coalesce(xpp.valor_capital,0) , --capitalperiodo
+	coalesce(xpp.valor_capital,0) ,--coalesce(xpp.valor_capital,0)-coalesce(xh.deuda,0) ||','||--saldoactualcapital
+	0, --saldoanteriorcorrientes
+	cast(xpp.pago_interes as integer), --diasinterescorriente
+	coalesce(xpp.tasa_periodo,0) , --porcentajecorriente
+	coalesce(xpp.valor_interes,0) , --interescorrienteperiodo
+	0 , --saldoactualcorriente 
+	0 , --Saldo anterior moratorio , tabla diana
+	0 , --dias mora, tabla diana
+	0 , --interesmoratorioperiodo
+	0 , --porcentajemora
+	0 , --saldoactualmoratorios
+	0 , --cuotaseguro
+	0 , --saldoactualseguro
+	0 , --saldonuevocredito
+	to_date('".$fecha_creacion."','yyyy-mm-dd'), --creacion
+	0 ,--saldoanteriorseguro
+	0 ,--abonocapital
+	0 ,--abonocorriente
+	0 ,--abonomoratorios
+	0, --abonoseguro
+	0 , --interesgenerado
+	0 , -- abonointeresgenerado
+	0  --saldointeresgenerado
+from 	
+	xeo_plandepagos xpp
+inner join 
+	(select 
+	substring(descripcion from position ('Num.Credito:' in descripcion)+12 for char_length(descripcion)) as credito,id
+	from m_cli_liquidacion_cuota) mclc
+		on (trim(xpp.numero_credito) = trim(mclc.credito))
+inner join 
+	(select id,numerocredito,
+		(case
+		when modalidadpago='Mensual' then 1
+		when modalidadpago='Bimestral' then 2
+		when modalidadpago='Trimestral' then  3
+		when modalidadpago='Cuatrimestral' then  4
+		when modalidadpago='Pentamestral' then  5
+		when modalidadpago='Semestral' then 6
+		when modalidadpago='Septamestral' then 7
+		when modalidadpago='Octamestral' then 8
+		when modalidadpago='Nonamestral' then 9
+		when modalidadpago='Decamestral' then 10
+		when modalidadpago='Anual' then  12
+		end) mesespago
+		from m_cli_credito_aprobado
+	) mcca
+		on (trim(mcca.numerocredito)=trim(xpp.numero_credito))
+
+where mcca.numerocredito IN  (select numero_colocacion 
+				from(SELECT NUMERO_COLOCACION, SUM(VALOR_TRANSACCION) 
+							FROM XEO_HISTORICO
+							WHERE NUMERO_COLOCACION IN (SELECT NUMERO_CREDITO 
+														FROM XEO_PLANDEPAGOS
+														WHERE CUOTA='0') 
+							AND CUOTA IS NOT NULL
+							GROUP BY NUMERO_COLOCACION
+							)a
+				)
+AND CAST(COALESCE(xpp.cuota,'0') AS INTEGER)=0
+	
+";
+sc_exec_sql($vsql);
+
+
+
+$vsql ="update  M_CLI_DETALLE_LIQUIDACION_CUOTA set 
+				saldoactualcapital=0,
+				saldoactualcorriente=0,
+				saldoactualseguro=0,
+				saldoactualmoratorios=0";
+sc_exec_sql($vsql);
+	
+$vsql ="update	m_cli_detalle_liquidacion_cuota set 	
+			saldoactualcapital = coalesce(capitalperiodo,0)-coalesce(abonocapital,0) ";
+sc_exec_sql($vsql);
+
+$vsql ="update 	m_cli_detalle_liquidacion_cuota set 	
+		saldoactualcorriente = coalesce(INTERESCORRIENTEPERIODO,0) -coalesce(ABONOCORRIENTE,0) "; 
+sc_exec_sql($vsql);
+
+$vsql ="update 	m_cli_detalle_liquidacion_cuota set 	
+		saldoactualmoratorios = coalesce(interesmoratorioperiodo,0) - coalesce(abonomoratorios,0) "; 
+sc_exec_sql($vsql);
+	
+$vsql ="update 	m_cli_detalle_liquidacion_cuota set 	
+	saldoactualseguro = coalesce(cuotaseguro,0) - coalesce(ABONOSEGURO,0)"; 
+sc_exec_sql($vsql);
+	
+$vsql ="update 	m_cli_detalle_liquidacion_cuota set 	
+			saldonuevocredito = coalesce(saldoactualcapital,0) 	+ 
+								coalesce(saldoactualcorriente,0) 			+ 
+								coalesce(saldoactualmoratorios,0) 			+ 
+								coalesce(saldoactualseguro,0) "; 
+sc_exec_sql($vsql);
+
+updates_saldos_creditos();
+
+updates_fechas_iniciales();
+
+updates_creditos_con_periodo_gracia();
+
