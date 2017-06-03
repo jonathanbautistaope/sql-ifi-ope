@@ -1,4 +1,7 @@
-llenar_temporal_cre_nov();
+/* interesgenerado es utilizado con la finalidad de almacenar el valor de los intereses que se deben pagar desde la fecha de desembolso hasta la primera fecha de corte del credito.
+Estos intereses se deben cargar en la primera cuota, pero, si el valor de dichos interes en el caso de cuotas fijas sobrepasa el valor de la cuota, la diferencia a este valor debe ser distribuida en las cuotas siguietes y adicionalmente si la persona llega a cancelar todo el credito debe tenerse en cuenta el valor almacenado en este campo.
+*/	
+		llenar_temporal_cre_nov();
 
 $vsql ="delete from m_cli_detalle_liquidacion_cuota ";
 sc_exec_sql($vsql);
@@ -48,8 +51,8 @@ SELECT mclc.id,--m_cli_liquidacion_cuotaid
 		ELSE COALESCE(XH.INTERES_CORRIENTE,0) END  ,--abonocorriente
 	coalesce(xh.mora,0) ,--abonomoratorios
 	coalesce(xh.seguro,0), --abonoseguro
-	coalesce (xh.interes_corriente,0), --interesgenerado
-	coalesce (xh.interes_corriente,0), -- abonointeresgenerado
+	coalesce (0,0), --interesgenerado
+	coalesce (0,0), -- abonointeresgenerado
 	coalesce (0) --saldointeresgenerado
 from 	
 	xeo_plandepagos xpp
@@ -363,4 +366,3 @@ updates_saldos_creditos();
 updates_fechas_iniciales();
 
 updates_creditos_con_periodo_gracia();
-
